@@ -64,6 +64,7 @@ public class AgentService {
         if (agCode != null ) {
 
             AgentNew singleAgent=agentRepo.findById(agCode).orElseThrow(()-> new RuntimeException("Agent not found"));
+            System.out.println(singleAgent.getName());
             e.getIn().setBody(singleAgent);
         }
         else {

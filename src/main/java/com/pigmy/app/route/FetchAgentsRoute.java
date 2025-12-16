@@ -10,7 +10,7 @@ public class FetchAgentsRoute extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class)
                 .handled(true)
-                .log(LoggingLevel.ERROR,"An error occured while updating agent- ${exception.message}")
+                .log(LoggingLevel.ERROR,"An error occured while fetching agent- ${exception.message}")
                 .logStackTrace(true);
 
         from("direct:fetchAgents")
