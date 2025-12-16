@@ -15,5 +15,7 @@ public class UserData {
 
     private Integer agentCode;
 
+    private String bankCode;
+
     private List<UserList> users;
 }

@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Component("transactionService")
 public class TransactionService {
@@ -36,12 +37,12 @@ public class TransactionService {
     private UserRepo userRepo;
 
 
-    public void addDeposit(@Header("agentCode") final Integer agCode, @Header("userId") final long userid, @Header("depositAmount") final BigDecimal dsAmount,@Header("depositeDate") Date dt, final Exchange e)
+    public FetchTransactionResponse addDeposit(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("userId") final long userid, @Header("depositAmount") final BigDecimal dsAmount, @Header("depositeDate") Date dt, final Exchange e)
     {
 
         User customer = userRepo.findById(userid)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
-        AgentNew agent = agentRepo.findById(agCode)
+        AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agCode,bankCode)
                 .orElseThrow(() -> new RuntimeException("Agent not found"));
         Instant nowInstant = Instant.now();
         Date todayLegacyDate = Date.from(nowInstant);
@@ -54,24 +55,30 @@ public class TransactionService {
 
 
         Transaction h= transactionRepoRepo.save(tx);
-        System.out.println(h.getAgents().getName());
-        System.out.println(h.getUser().getCustomerName());
+        FetchTransactionResponse rs=FetchTransactionResponse.builder()
+                .trasactionId(h.getId())
+                .depositAmount(h.getDepositAmount())
+                .customerName(h.getUser().getCustomerName())
+                .accountNumber(h.getUser().getAccountNumber()).build();
+
+        return rs;
+
 
 
     }
 
-    public List<FetchTransactionResponse> fetchTransaction(@Header("agentCode") final Integer agCode, @Header("dateRange") final LocalDate daterange, final Exchange e)
+    public List<FetchTransactionResponse> fetchTransaction(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode, @Header("dateRange") final LocalDate daterange, final Exchange e)
     {
-         List<Transaction> tr =transactionRepoRepo.findByAgents_AgentCodeAndDepositeDate(agCode,daterange);
+         List<Transaction> tr =transactionRepoRepo.findByAgents_AgentCodeAndAgents_bankCodeAndDepositeDate(agCode,bankCode,daterange);
          List<FetchTransactionResponse> rs=new ArrayList<>();
 
          for(Transaction k:tr)
          {
-             FetchTransactionResponse response=new FetchTransactionResponse();
-             response.setTrasactionId(k.getId());
-             response.setAccountNumber(k.getUser().getAccountNumber());
-             response.setCustomerName(k.getUser().getCustomerName());
-             response.setDepositAmount(k.getDepositAmount());
+             FetchTransactionResponse response=FetchTransactionResponse.builder()
+                     .trasactionId(k.getId())
+                     .depositAmount(k.getDepositAmount())
+                     .customerName(k.getUser().getCustomerName())
+                     .accountNumber(k.getUser().getAccountNumber()).build();
              rs.add(response);
          }
 

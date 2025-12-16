@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface TransactionRepo extends JpaRepository<Transaction,Long> {
 
-    List<Transaction> findByAgents_AgentCodeAndDepositeDate(Integer agentCode, LocalDate depositeDate);
+    List<Transaction> findByAgents_AgentCodeAndAgents_bankCodeAndDepositeDate(Integer agentCode, String bankCode,LocalDate depositeDate);
 
 }

@@ -42,10 +42,22 @@ public class AgentService {
 
     }
 
-    public ResponseEntity<?> updateAgent(@Body AgentNew updateAgent, @Header("agentCode") final Integer agCode) throws Exception {
-        AgentNew existingAgent=agentRepo.findById(agCode).orElseThrow(()-> new RuntimeException("Agent not found"));
+    public ResponseEntity<?> updateAgent(@Body AgentNew updateAgent, @Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode) throws Exception {
+        System.out.println(agCode);
+        System.out.println(bankCode);
+        AgentNew existingAgent = agentRepo.findByAgentCodeAndBankCode(agCode, bankCode)
+                .orElseThrow(() -> new RuntimeException("Agent not found"));
 
-        BeanUtils.copyProperties(updateAgent,existingAgent,"agentCode");
+        // Update only the fields you want
+        existingAgent.setName(updateAgent.getName());
+        existingAgent.setAddress(updateAgent.getAddress());
+        existingAgent.setPhone(updateAgent.getPhone());
+        existingAgent.setEmail(updateAgent.getEmail());
+        existingAgent.setLimitAmount(updateAgent.getLimitAmount());
+        existingAgent.setType(updateAgent.getType());
+        existingAgent.setAgentCode(updateAgent.getAgentCode());
+        existingAgent.setBankCode(updateAgent.getBankCode());
+        existingAgent.setPassword(updateAgent.getPassword());
 
         AgentNew updated=agentRepo.save(existingAgent);
 
@@ -59,12 +71,11 @@ public class AgentService {
 
     }
 
-    public void fetchAgent(@Header("agentCode") final Integer agCode,final Exchange e)
+    public void fetchAgent(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode,final Exchange e)
     {
         if (agCode != null ) {
 
-            AgentNew singleAgent=agentRepo.findById(agCode).orElseThrow(()-> new RuntimeException("Agent not found"));
-            System.out.println(singleAgent.getName());
+            AgentNew singleAgent=agentRepo.findByAgentCodeAndBankCode(agCode,bankCode).orElseThrow(()-> new RuntimeException("Agent not found"));
             e.getIn().setBody(singleAgent);
         }
         else {

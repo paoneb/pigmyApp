@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface UserRepo extends JpaRepository<User,Long> {
 
-    Optional<User> findByAccountNumber(Integer accountNumber);
+    Optional<User> findByAccountNumberAndAgents_BankCode(Integer accountNumber,String bankCode);
 
-    List<User> findByAgents_AgentCode(Integer agentCode);
+    List<User> findByAgents_AgentCodeAndAgents_BankCode(Integer agentCode,String bankCode);
 
 
 }

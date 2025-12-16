@@ -25,7 +25,7 @@ public class User {
     @Column(name = "customer_name")
     private String customerName;
 
-    @Column(name = "account_number",unique = true)
+    @Column(name = "account_number")
     private Integer accountNumber;
 
 
@@ -37,7 +37,10 @@ public class User {
     private Date lastDepositDate;
 
     @ManyToOne
-    @JoinColumn(name = "agent_code", referencedColumnName = "agent_code")
+    @JoinColumns({
+            @JoinColumn(name="agent_code", referencedColumnName="agent_code"),
+            @JoinColumn(name="bank_code", referencedColumnName="bank_code")
+    })
     @JsonIgnore
     private AgentNew agents;
 

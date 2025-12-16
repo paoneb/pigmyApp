@@ -1,6 +1,7 @@
 package com.pigmy.app.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
@@ -29,11 +30,16 @@ public class Transaction {
 
     // Many transactions belong to one agent
     @ManyToOne
-    @JoinColumn(name = "agent_code", referencedColumnName = "agent_code")
+    @JoinColumns({
+            @JoinColumn(name="agent_code", referencedColumnName="agent_code"),
+            @JoinColumn(name="bank_code", referencedColumnName="bank_code")
+    })
+    @JsonIgnore
     private AgentNew agents;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    @JsonIgnore
     private User user;
 
 

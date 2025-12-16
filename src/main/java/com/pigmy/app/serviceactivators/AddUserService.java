@@ -25,10 +25,10 @@ public class AddUserService {
     private AgentRepo agentRepo;
 
     public ResponseEntity saveUsers(@Body UserData u) throws Exception {
-        AgentNew singleAgent = agentRepo.findById(u.getAgentCode()).orElseThrow(() -> new Exception("Agent not found"));
+       AgentNew singleAgent = agentRepo.findByAgentCodeAndBankCode(u.getAgentCode(),u.getBankCode()).orElseThrow(() -> new Exception("Agent not found"));
 
         for (UserList lis : u.getUsers()) {
-            userRepo.findByAccountNumber(lis.getAccountNumber())
+            userRepo.findByAccountNumberAndAgents_BankCode(lis.getAccountNumber(),u.getBankCode())
                     .map(existing -> {
                         existing.setCurrentBalance(lis.getCurrentBalance());
                         existing.setCustomerName(lis.getCustomerName());
@@ -52,10 +52,10 @@ public class AddUserService {
         return ResponseEntity.ok("Customer added successfully");
     }
 
-    public List<User> fetchCustomers(@Header("agentCode") final Integer agentCode)
+    public List<User> fetchCustomers(@Header("agentCode") final Integer agentCode,@Header("bankCode") final String bankCode)
     {
         if (agentCode != null) {
-            return userRepo.findByAgents_AgentCode(agentCode);
+            return userRepo.findByAgents_AgentCodeAndAgents_BankCode(agentCode,bankCode);
 
         } else {
             return userRepo.findAll();

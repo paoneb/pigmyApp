@@ -19,6 +19,10 @@ import java.util.List;
 @Data
 public class AgentNew {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(name="agent_name")
     private String name;
 
@@ -30,11 +34,11 @@ public class AgentNew {
     private String phone;
     private String email;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true,nullable = false,name = "agent_code")
+
+    @Column(name = "agent_code")
     private Integer agentCode;
 
+    @Column(name = "bank_code")
     private String bankCode;
     private String type;
     private long limitAmount;
