@@ -28,6 +28,15 @@ public class Transaction {
     @Column(name = "date")
     private LocalDate depositeDate;
 
+    @Column
+    private String schemename;
+
+    @Column
+    private String ledgergroup;
+
+    @Column
+    private String collectiontype;
+
     // Many transactions belong to one agent
     @ManyToOne
     @JoinColumns({
@@ -39,6 +48,7 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "customer_name", referencedColumnName = "customer_name")
     @JsonIgnore
     private User user;
 

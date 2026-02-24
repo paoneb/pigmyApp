@@ -37,7 +37,7 @@ public class TransactionService {
     private UserRepo userRepo;
 
 
-    public FetchTransactionResponse addDeposit(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("userId") final long userid, @Header("depositAmount") final BigDecimal dsAmount, @Header("depositeDate") Date dt, final Exchange e)
+    public FetchTransactionResponse addDeposit(@Header("agentCode") final Integer agCode,@Header("schemename") final String schemename,@Header("ledgergroup") final String ledgergroup, @Header("collectiontype") final String collectiontype,@Header("customername") final String customername,@Header("bankCode") final String bankCode, @Header("userId") final long userid, @Header("depositAmount") final BigDecimal dsAmount, @Header("depositeDate") Date dt, final Exchange e)
     {
 
         User customer = userRepo.findById(userid)
@@ -51,6 +51,9 @@ public class TransactionService {
         tx.setAgents(agent);
         tx.setDepositAmount(dsAmount);
         tx.setDepositeDate(LocalDate.now());
+        tx.setCollectiontype(collectiontype);
+        tx.setLedgergroup(ledgergroup);
+        tx.setSchemename(schemename);
 
 
 

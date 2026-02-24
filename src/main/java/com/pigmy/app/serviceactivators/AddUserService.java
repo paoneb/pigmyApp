@@ -55,7 +55,7 @@ public class AddUserService {
     public List<User> fetchCustomers(@Header("agentCode") final Integer agentCode,@Header("bankCode") final String bankCode)
     {
         if (agentCode != null) {
-            return userRepo.findByAgents_AgentCodeAndAgents_BankCode(agentCode,bankCode);
+            return userRepo.findUsersByAgent(agentCode,bankCode);
 
         } else {
             return userRepo.findAll();
