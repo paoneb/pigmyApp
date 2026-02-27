@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginResponse {
 
+    private String bankName;
     private String bankCode;
     private String token;
 

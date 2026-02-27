@@ -36,9 +36,9 @@ public class AdminLoginRoute extends RouteBuilder {
                 .process(exchange -> {
                     LoginRequest req = exchange.getIn().getBody(LoginRequest.class);
 
-                    if (adminService.validate(req.getUserName(), req.getPassword(), req.getBankCode())) {
+                    if (adminService.validate(req.getUserName(), req.getPassword(), req.getBankCode(),exchange)) {
                         String token = jwtUtil.generateToken(req.getUserName(), req.getBankCode());
-                        exchange.getMessage().setBody(new LoginResponse(req.getBankCode(), token));
+                        exchange.getMessage().setBody(new LoginResponse(exchange.getProperty("bankName").toString(),req.getBankCode(), token));
                         System.out.println("logged in");
                     } else {
                         exchange.getMessage().setHeader("CamelHttpResponseCode", 401);

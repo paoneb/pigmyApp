@@ -32,11 +32,7 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .component("servlet")
                 .bindingMode(RestBindingMode.auto)
                 .contextPath(restApiBaseUrl)
-                .apiProperty("cors","true")
-                .enableCORS(true)
-                .corsAllowCredentials(true)
-                .corsHeaderProperty("Access-Control-Allow-Origin", "*")
-                .corsHeaderProperty("Access-Control-Allow-Methods", "*");
+                .apiProperty("cors","true");
 
 
         rest(agentPath).description("creating new agent")

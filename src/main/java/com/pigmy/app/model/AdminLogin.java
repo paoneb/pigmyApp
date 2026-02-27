@@ -18,5 +18,6 @@ public class AdminLogin{
     private String userName;
     private String password;
     private String bankCode;
+    private String bankName;
 
 }
