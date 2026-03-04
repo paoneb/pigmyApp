@@ -79,7 +79,7 @@ public class AgentService {
             e.getIn().setBody(singleAgent);
         }
         else {
-            List<AgentNew> multipleAgents=agentRepo.findAll();
+            List<AgentNew> multipleAgents=agentRepo.findAllAgentByBankCode(bankCode);
             e.getIn().setBody(multipleAgents);
         }
 
