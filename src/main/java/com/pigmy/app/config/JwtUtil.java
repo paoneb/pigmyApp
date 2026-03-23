@@ -19,8 +19,8 @@ public class JwtUtil {
     private static final String SECRET_KEY = "13f760869577f85a5dceb39e69d83e1998898cbe662f27bc9689a5b61e8a061b2a8329af";
 
 
-   // private static final long EXPIRATION = 1000 * 60 * 60; // 1 hour
-   private static final long EXPIRATION= 1000 * 60 * 5;
+    private static final long EXPIRATION = 1000 * 60 * 60; // 1 hour
+   //private static final long EXPIRATION= 1000 * 60 * 5;
 
     public String generateToken(String username, String bankCode) {
         return Jwts.builder()

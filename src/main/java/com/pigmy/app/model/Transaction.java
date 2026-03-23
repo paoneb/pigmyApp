@@ -1,6 +1,7 @@
 package com.pigmy.app.model;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -22,10 +23,9 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "deposit_amount")
-    private BigDecimal depositAmount;
+    private Double collectedAmount;
 
-    @Column(name = "date")
+    @Column(name = "collected_date")
     private LocalDate depositeDate;
 
     @Column
@@ -37,8 +37,11 @@ public class Transaction {
     @Column
     private String collectiontype;
 
+    @Column
+    private String status;
+
     // Many transactions belong to one agent
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumns({
             @JoinColumn(name="agent_code", referencedColumnName="agent_code"),
             @JoinColumn(name="bank_code", referencedColumnName="bank_code")
@@ -46,11 +49,15 @@ public class Transaction {
     @JsonIgnore
     private AgentNew agents;
 
-    @ManyToOne
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     @JoinColumn(name = "customer_name", referencedColumnName = "customer_name")
     @JsonIgnore
     private User user;
+
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name = "agent_deposit_id", referencedColumnName = "id")
+    private AgentDeposit agentDeposit;
 
 
 }

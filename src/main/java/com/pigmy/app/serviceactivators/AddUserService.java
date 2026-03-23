@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component("addUserService")
 public class AddUserService {
@@ -25,18 +27,20 @@ public class AddUserService {
     private AgentRepo agentRepo;
 
     public ResponseEntity saveUsers(@Body UserData u) throws Exception {
-       AgentNew singleAgent = agentRepo.findByAgentCodeAndBankCode(u.getAgentCode(),u.getBankCode()).orElseThrow(() -> new Exception("Agent not found"));
+       AgentNew singleAgent = agentRepo.findByAgentCodeAndBankCode(u.getAgentCode(),u.getBankCode())
+               .orElseThrow(() -> new Exception("Agent not found"));
+
+        List<User> toSave = new ArrayList<>();
 
         for (UserList lis : u.getUsers()) {
             userRepo.findByAccountNumberAndAgents_BankCode(lis.getAccountNumber(),u.getBankCode())
-                    .map(existing -> {
+                    .ifPresentOrElse(existing -> {
                         existing.setCurrentBalance(lis.getCurrentBalance());
                         existing.setCustomerName(lis.getCustomerName());
                         existing.setLastDepositDate(lis.getLastDepositDate());
-                         userRepo.save(existing);
-                        return ResponseEntity.ok("Customer added successfully");
-                    })
-                    .orElseGet(() -> {
+                        toSave.add(existing);
+                    },
+                            () -> {
                         // first time save
                         User user = new User();
                         user.setAccountNumber(lis.getAccountNumber());
@@ -44,10 +48,10 @@ public class AddUserService {
                         user.setCurrentBalance(lis.getCurrentBalance());
                         user.setLastDepositDate(lis.getLastDepositDate());
                         user.setAgents(singleAgent);
-                         userRepo.save(user);
-                        return ResponseEntity.ok("Customer added successfully");
+                        toSave.add(user);
                     });
         }
+        userRepo.saveAll(toSave);
 
         return ResponseEntity.ok("Customer added successfully");
     }

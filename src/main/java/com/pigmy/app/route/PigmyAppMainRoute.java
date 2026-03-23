@@ -1,6 +1,7 @@
 package com.pigmy.app.route;
 
 import com.pigmy.app.model.*;
+import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;
@@ -43,11 +44,20 @@ public class PigmyAppMainRoute extends RouteBuilder {
              .outType(CreateAgentResponse.class)
              .to("direct:createNewAgent")
 
+             .post("/deposit/singleDate")
+             .description("agent depositing amount")
+             .type(AgentDepositRequest.class)
+             .outType(AgentDepositResponse.class)
+             .to("direct:agentDeposit")
+
+             .post("/deposit/multipleDate")
+             .description("agent depositing amount")
+             .type(AgentDepositRequest.class)
+             .outType(AgentDepositResponse.class)
+             .to("direct:agentMultipleDeposit")
 
              .patch()
-             .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
-              .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
-             .type(AgentNew.class)
+             .type(AgentUpdateRequest.class)
              .outType(CreateAgentResponse.class)
              .to("direct:updateAgent")
 
@@ -74,7 +84,7 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
                 .param().name("userId").type(RestParamType.query).dataType("Long").required(true).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
-                .param().name("depositAmount").type(RestParamType.query).dataType("BigDecimal").required(true).endParam()
+                .param().name("depositAmount").type(RestParamType.query).dataType("Double").required(true).endParam()
                 .param().name("depositeDate").type(RestParamType.query).dataType("Date").required(false).endParam()
                 .param().name("schemename").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("ledgergroup").type(RestParamType.query).dataType("String").required(true).endParam()

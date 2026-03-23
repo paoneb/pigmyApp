@@ -17,25 +17,18 @@ public class CreateAgentRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-
-        // successAdd.setUnmarshalType(AgentNew.class);
-        //successAdd.disableFeature(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        //successAdd.enableFeature(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
         onException(Exception.class)
                 .handled(true)
-                .log(LoggingLevel.ERROR,"An error occured while creating agent- ${exception.message}")
+                .log(LoggingLevel.ERROR, "An error occured while creating agent- ${exception.message}")
                 .logStackTrace(true);
 
 
         from("direct:createNewAgent")
                 .routeId(CreateAgentRoute.class.getSimpleName())
-                .log(LoggingLevel.INFO,"create new agent request: ${body}")
-               // .unmarshal().json(JsonLibrary.Jackson, Agent.class)
-                //.unmarshal().json(JsonLibrary.Jackson, AgentNew.class)
-                //.setProperty("CreateAgentRequest",body())
-                .bean("agentService","saveAgent");
+                .log(LoggingLevel.INFO, "create new agent request: ${body}")
+                .bean("agentService", "saveAgent");
+
 
     }
-
 
 }

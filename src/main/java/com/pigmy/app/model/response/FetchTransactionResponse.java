@@ -15,7 +15,7 @@ public class FetchTransactionResponse {
     private Long trasactionId;
     private Integer accountNumber;
     private String customerName;
-    private BigDecimal depositAmount;
+    private Double depositAmount;
 
 
 }

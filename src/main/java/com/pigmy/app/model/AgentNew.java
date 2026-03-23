@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -42,18 +43,19 @@ public class AgentNew {
     private String bankCode;
     private String type;
     private long limitAmount;
+    private String status;
 
 
-    // One agent can have many transactions
-    @OneToMany(mappedBy = "agents", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "agents")
     @JsonIgnore
-    private List<Transaction> transactions;
+    private List<Transaction> transactions ;
 
-    @OneToMany(mappedBy = "agents", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "agents")
     @JsonIgnore
-    private List<User> user;
+    private List<User> user ;
 
-
-
+    @OneToMany(mappedBy = "agents")
+    @JsonIgnore
+    private List<AgentDeposit> agentDeposits;
 
 }
