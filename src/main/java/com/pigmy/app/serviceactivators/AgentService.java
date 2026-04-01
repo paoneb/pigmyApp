@@ -24,11 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component("agentService")
@@ -119,7 +117,8 @@ public class AgentService {
         LOGGER.info("agent deposit request received agentCode: {}, bankCode: {}",agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode());
         AgentDeposit agd=new AgentDeposit();
 
-        agd.setAgents(agent);
+        agd.setAgentCode(agentDepositrequest.getAgentCode());
+        agd.setBankCode(agentDepositrequest.getBankCode());
         agd.setDepositingAmount(agentDepositrequest.getDepositingAmount());
         agd.setVoucherId(agentDepositrequest.getVoucherId());
         agd.setDepositDate(LocalDate.now());
@@ -132,17 +131,16 @@ public class AgentService {
 
     public void agentMultipleDeposit(@Body AgentDepositRequest agentDepositrequest,final Exchange e)
     {
-        String[] dates = agentDepositrequest.getDateOfCollectedAmount().split(" to ");
-        LocalDate start = LocalDate.parse(dates[0].trim());
-        LocalDate end = LocalDate.parse(dates[1].trim());
         AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode())
                 .orElseThrow(() -> new RuntimeException("Agent not found"));
 
         LOGGER.info("agent deposit multiple date request received agentCode: {}, bankCode: {}",agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode());
 
+
         AgentDeposit agd=new AgentDeposit();
 
-        agd.setAgents(agent);
+        agd.setAgentCode(agentDepositrequest.getAgentCode());
+        agd.setBankCode(agentDepositrequest.getBankCode());
         agd.setDepositingAmount(agentDepositrequest.getDepositingAmount());
         agd.setVoucherId(agentDepositrequest.getVoucherId());
         agd.setDepositDate(LocalDate.now());

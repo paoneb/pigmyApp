@@ -1,6 +1,7 @@
 package com.pigmy.app.model;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -27,23 +28,16 @@ public class AgentDeposit {
     @Column(name = "voucher_id")
     private String voucherId;
 
+    @Column
     private String DateOfCollectedAmount;
 
     @Column(name = "deposit_date")
     private LocalDate depositDate;
 
+    @Column
+    private Integer agentCode;
 
-   // @OneToMany(mappedBy = "agentDeposit", cascade = CascadeType.ALL, orphanRemoval = true)
-    //@JsonIgnore
-    //private List<Transaction> transactions;
-
-    @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumns({
-            @JoinColumn(name="agent_code", referencedColumnName="agent_code"),
-            @JoinColumn(name="bank_code", referencedColumnName="bank_code"),
-            @JoinColumn(name="agent_name", referencedColumnName="agent_name")
-    })
-    @JsonIgnore
-    private AgentNew agents;
+    @Column
+    private String bankCode;
 
 }

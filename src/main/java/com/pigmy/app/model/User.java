@@ -33,20 +33,15 @@ public class User {
     private long currentBalance;
 
     @Column(name = "last_deposit_date")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date lastDepositDate;
+    private String lastDepositDate;
 
-    @ManyToOne
-    @JoinColumns({
-            @JoinColumn(name="agent_code", referencedColumnName="agent_code"),
-            @JoinColumn(name="bank_code", referencedColumnName="bank_code")
-    })
-    @JsonIgnore
-    private AgentNew agents;
+    @Column
+    private String schemeId;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Transaction> transactions;
+    @Column
+    private Integer agentCode;
 
-    // getters and setters
+    @Column
+    private String bankCode;
+
 }

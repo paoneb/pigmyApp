@@ -56,11 +56,18 @@ public class JwtFilter extends OncePerRequestFilter {
                 System.out.println("Path: " + request.getRequestURI());
                 System.out.println("Auth header: " + request.getHeader("Authorization"));
                 System.out.println("Authentication: " + SecurityContextHolder.getContext().getAuthentication());
-
-            } catch (Exception e) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
-                return;
             }
+           catch (io.jsonwebtoken.ExpiredJwtException e) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Token expired\"}");
+                    return;
+                } catch (io.jsonwebtoken.JwtException e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Invalid token\"}");
+                    return;
+                }
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Token");
             return;

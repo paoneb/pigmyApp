@@ -33,8 +33,9 @@ public class AddUserService {
         List<User> toSave = new ArrayList<>();
 
         for (UserList lis : u.getUsers()) {
-            userRepo.findByAccountNumberAndAgents_BankCode(lis.getAccountNumber(),u.getBankCode())
+            userRepo.findByAccountNumberAndBankCode(lis.getAccountNumber(),u.getBankCode())
                     .ifPresentOrElse(existing -> {
+                        existing.setSchemeId(lis.getSchemeId());
                         existing.setCurrentBalance(lis.getCurrentBalance());
                         existing.setCustomerName(lis.getCustomerName());
                         existing.setLastDepositDate(lis.getLastDepositDate());
@@ -43,11 +44,13 @@ public class AddUserService {
                             () -> {
                         // first time save
                         User user = new User();
+                        user.setSchemeId(lis.getSchemeId());
                         user.setAccountNumber(lis.getAccountNumber());
                         user.setCustomerName(lis.getCustomerName());
                         user.setCurrentBalance(lis.getCurrentBalance());
                         user.setLastDepositDate(lis.getLastDepositDate());
-                        user.setAgents(singleAgent);
+                        user.setBankCode(u.getBankCode());
+                        user.setAgentCode(u.getAgentCode());
                         toSave.add(user);
                     });
         }
@@ -59,7 +62,7 @@ public class AddUserService {
     public List<User> fetchCustomers(@Header("agentCode") final Integer agentCode,@Header("bankCode") final String bankCode)
     {
         if (agentCode != null) {
-            return userRepo.findUsersByAgent(agentCode,bankCode);
+            return userRepo.findUsersByAgentCode_bankCode(agentCode,bankCode);
 
         } else {
             return userRepo.findAll();

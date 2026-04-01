@@ -18,6 +18,8 @@ public class UserList {
     private long currentBalance;
 
 
-    private Date lastDepositDate;
+    private String lastDepositDate;
+
+    private String schemeId;
 
 }

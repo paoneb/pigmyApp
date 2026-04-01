@@ -11,6 +11,8 @@ import com.pigmy.app.repository.UserRepo;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
 import org.apache.camel.ValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,46 +39,24 @@ public class TransactionService {
     @Autowired
     private UserRepo userRepo;
 
-
-    public FetchTransactionResponse addDeposit(@Header("agentCode") final Integer agCode, @Header("schemename") final String schemename, @Header("ledgergroup") final String ledgergroup, @Header("collectiontype") final String collectiontype, @Header("customername") final String customername, @Header("bankCode") final String bankCode, @Header("userId") final long userid, @Header("depositAmount") final Double dsAmount, @Header("depositeDate") Date dt, final Exchange e) {
-
-        User customer = userRepo.findById(userid)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
-        AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agCode, bankCode)
-                .orElseThrow(() -> new RuntimeException("Agent not found"));
-        Transaction tx = new Transaction();
-        tx.setUser(customer);
-        tx.setAgents(agent);
-        tx.setCollectedAmount(dsAmount);
-        tx.setDepositeDate(LocalDate.now());
-        tx.setCollectiontype(collectiontype);
-        tx.setLedgergroup(ledgergroup);
-        tx.setSchemename(schemename);
-        tx.setStatus("C");
+    private final Logger LOGGER= LoggerFactory.getLogger(TransactionService.class);
 
 
-        Transaction h = transactionRepoRepo.save(tx);
-        FetchTransactionResponse rs = FetchTransactionResponse.builder()
-                .trasactionId(h.getId())
-                .depositAmount(h.getCollectedAmount())
-                .customerName(h.getUser().getCustomerName())
-                .accountNumber(h.getUser().getAccountNumber()).build();
+    public List<FetchTransactionResponse> fetchTransaction(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("date") final LocalDate selectedDate, final Exchange e) {
+        List<Transaction> tr = transactionRepoRepo.findByAgentCodeAndBankCodeAndCollectedDateAndstatus(agCode, bankCode, selectedDate);
 
-        return rs;
+        if (tr.isEmpty()) {
+            throw new RuntimeException("No transactions found for date: " + selectedDate);
+        }
 
-
-    }
-
-    public List<FetchTransactionResponse> fetchTransaction(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("dateRange") final LocalDate daterange, final Exchange e) {
-        List<Transaction> tr = transactionRepoRepo.findByAgents_AgentCodeAndAgents_bankCodeAndDepositeDate(agCode, bankCode, daterange);
         List<FetchTransactionResponse> rs = new ArrayList<>();
 
         for (Transaction k : tr) {
             FetchTransactionResponse response = FetchTransactionResponse.builder()
                     .trasactionId(k.getId())
-                    .depositAmount(k.getCollectedAmount())
-                    .customerName(k.getUser().getCustomerName())
-                    .accountNumber(k.getUser().getAccountNumber()).build();
+                    .collectedAmount(k.getCollectedAmount())
+                    .customerName(k.getCustomerName())
+                    .accountNumber(k.getAccountNumber()).build();
             rs.add(response);
         }
 
@@ -97,7 +78,9 @@ public class TransactionService {
         final AgentDeposit agentDeposit = exchange.getProperty("agentDepositedSuccess", AgentDeposit.class);
 
         if (agentDeposit.getId() != null) {
-            List<Transaction> transactions = transactionRepoRepo.findByDepositeDate(LocalDate.parse(agentDepositrequest.getDateOfCollectedAmount()));
+
+            List<Transaction> transactions = exchange.getProperty("transactionDetailsSingleDate",List.class);
+
             if (transactions.isEmpty()) {
                 throw new RuntimeException("No transactions found for date: " + agentDepositrequest.getDateOfCollectedAmount());
             }
@@ -105,7 +88,7 @@ public class TransactionService {
             // Update status
             transactions.forEach(tx -> {
                 tx.setStatus("D");
-                tx.setAgentDeposit(agentDeposit);
+                tx.setAgentDepositId(agentDeposit.getId());
             });
 
             // Save back (bulk save)
@@ -115,10 +98,10 @@ public class TransactionService {
                     .map(tr -> {
                         UserCollection l = new UserCollection();
                         l.setSchemeId(tr.getSchemename());
-                        l.setAccountNumber(tr.getUser().getAccountNumber());
+                        l.setAccountNumber(tr.getAccountNumber());
                         l.setCollectedAmount(BigDecimal.valueOf(tr.getCollectedAmount()).setScale(0, RoundingMode.UNNECESSARY));
-                        l.setCustomerName(tr.getUser().getCustomerName());
-                        l.setCollectedDate(tr.getDepositeDate().toString());
+                        l.setCustomerName(tr.getCustomerName());
+                        l.setCollectedDate(tr.getCollectedDate().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
                         return l;
                     })
                     .collect(Collectors.toList());
@@ -127,9 +110,10 @@ public class TransactionService {
 
             agentDepositResponse.setAgentCode(agentDepositrequest.getAgentCode());
             agentDepositResponse.setBankCode(agentDepositrequest.getBankCode());
-            agentDepositResponse.setDepositedDate(LocalDate.now().toString());
+            agentDepositResponse.setDepositedDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
             agentDepositResponse.setUsers(userCollections);
             agentDepositResponse.setTotalCollectedAmount(exchange.getProperty("totalCollectedAmount",BigDecimal.class));
+            LOGGER.info("Deposited amount successfully");
             exchange.getIn().setBody(agentDepositResponse);
 
         }
@@ -146,7 +130,7 @@ public class TransactionService {
             // Update status
             transactions.forEach(tx -> {
                 tx.setStatus("D");
-                tx.setAgentDeposit(agentDeposit);
+                tx.setAgentDepositId(agentDeposit.getId());
             });
 
             // Save back (bulk save)
@@ -156,10 +140,10 @@ public class TransactionService {
                     .map(tr -> {
                         UserCollection l = new UserCollection();
                         l.setSchemeId(tr.getSchemename());
-                        l.setAccountNumber(tr.getUser().getAccountNumber());
+                        l.setAccountNumber(tr.getAccountNumber());
                         l.setCollectedAmount(BigDecimal.valueOf(tr.getCollectedAmount()).setScale(0, RoundingMode.UNNECESSARY));
-                        l.setCustomerName(tr.getUser().getCustomerName());
-                        l.setCollectedDate(tr.getDepositeDate().toString());
+                        l.setCustomerName(tr.getCustomerName());
+                        l.setCollectedDate(tr.getCollectedDate().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
                         return l;
                     })
                     .collect(Collectors.toList());
@@ -168,20 +152,29 @@ public class TransactionService {
 
             agentDepositResponse.setAgentCode(agentDepositrequest.getAgentCode());
             agentDepositResponse.setBankCode(agentDepositrequest.getBankCode());
-            agentDepositResponse.setDepositedDate(LocalDate.now().toString());
+            agentDepositResponse.setDepositedDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
             agentDepositResponse.setUsers(userCollections);
             agentDepositResponse.setTotalCollectedAmount(exchange.getProperty("totalCollectedAmountMultipleDate",BigDecimal.class));
+            LOGGER.info("Deposited amount successfully");
             exchange.getIn().setBody(agentDepositResponse);
 
         }
     }
 
 
-
     public void validateDepositingAmount(final Exchange exchange)
     {
         final AgentDepositRequest agentDepositrequest = exchange.getProperty("AgentDepositRequest", AgentDepositRequest.class);
-        List<Transaction> transactions = transactionRepoRepo.findByDepositeDate(LocalDate.parse(agentDepositrequest.getDateOfCollectedAmount()));
+        List<Transaction> transactions = transactionRepoRepo.findByAgentCodeAndBankCodeAndCollectedDateAndstatus(agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode(),LocalDate.parse(agentDepositrequest.getDateOfCollectedAmount()));
+
+        if (transactions.isEmpty()) {
+            throw new RuntimeException("No transactions found for date: " + agentDepositrequest.getDateOfCollectedAmount());
+        }
+        else
+        {
+            exchange.setProperty("transactionDetailsSingleDate",transactions);
+        }
+
 
         BigDecimal totalCollectedAmount = transactions.stream()
                 .map(Transaction::getCollectedAmount)          // Stream<Long>
@@ -189,6 +182,7 @@ public class TransactionService {
                 .map(BigDecimal::valueOf)                      // Convert Long → BigDecimal
                 .reduce(BigDecimal.ZERO, BigDecimal::add)      // Sum BigDecimals
                 .setScale(0, RoundingMode.HALF_UP);
+
         if(totalCollectedAmount.longValueExact()==agentDepositrequest.getDepositingAmount())
         {
             exchange.setProperty("validateDepositingAmount",true);
@@ -204,10 +198,12 @@ public class TransactionService {
     {
         final AgentDepositRequest agentDepositrequest = exchange.getProperty("AgentDepositMultipleDatesRequest", AgentDepositRequest.class);
 
-        String[] dates = agentDepositrequest.getDateOfCollectedAmount().split(" to ");
+        String[] dates = agentDepositrequest.getDateOfCollectedAmount().toString().split(" to ");
         LocalDate start = LocalDate.parse(dates[0].trim());
         LocalDate end = LocalDate.parse(dates[1].trim());
-        List<Transaction> transactions = transactionRepoRepo.findByDepositeDateRange(start,end);
+        System.out.println(start);
+        System.out.println(end);
+        List<Transaction> transactions = transactionRepoRepo.findByAgentCodeAndBankCodeAndCollectedDateRangeAndstatus(agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode(),start,end);
 
         if (transactions.isEmpty()) {
             throw new RuntimeException("No transactions found for date: " + agentDepositrequest.getDateOfCollectedAmount());
