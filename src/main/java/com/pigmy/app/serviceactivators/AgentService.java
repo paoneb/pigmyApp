@@ -7,6 +7,7 @@ import com.pigmy.app.model.AgentNew;
 import com.pigmy.app.model.AgentUpdateRequest;
 import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
+import com.pigmy.app.model.response.FetchPastDepositsResponse;
 import com.pigmy.app.model.response.UserCollection;
 import com.pigmy.app.repository.AgentDepositRepo;
 import com.pigmy.app.repository.AgentRepo;
@@ -119,7 +120,7 @@ public class AgentService {
         agd.setDepositingAmount(agentDepositrequest.getDepositingAmount());
         agd.setVoucherId(agentDepositrequest.getVoucherId());
         agd.setDepositDate(LocalDate.now());
-        agd.setDateOfCollectedAmount(agentDepositrequest.getDateOfCollectedAmount());
+       // agd.setDateOfCollectedAmount(agentDepositrequest.getDateOfCollectedAmount());
         agd.setDepositStatus("Progressing");
         agd.setAgentName(agentDepositrequest.getName());
 
@@ -135,6 +136,7 @@ public class AgentService {
 
         LOGGER.info("agent deposit multiple date request received agentCode: {}, bankCode: {}",agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode());
 
+        String collectedDate=agentDepositrequest.getFrom() +"to" +agentDepositrequest.getTo();
 
         AgentDeposit agd=new AgentDeposit();
 
@@ -143,7 +145,7 @@ public class AgentService {
         agd.setDepositingAmount(agentDepositrequest.getDepositingAmount());
         agd.setVoucherId(agentDepositrequest.getVoucherId());
         agd.setDepositDate(LocalDate.now());
-        agd.setDateOfCollectedAmount(agentDepositrequest.getDateOfCollectedAmount());
+        agd.setDateOfCollectedAmount(collectedDate);
         agd.setDepositStatus("Progressing");
         agd.setAgentName(agentDepositrequest.getName());
 
@@ -156,26 +158,27 @@ public class AgentService {
 
     public void updateStatus(final Exchange e)
     {
-        final AgentDeposit agentDeposit = e.getProperty("agentDepositedSuccess", AgentDeposit.class);
+        final AgentDeposit agentDeposit = e.getProperty("agentDepositedMultipleDateSuccess", AgentDeposit.class);
         agentDepositRepo.updateAgentDesositStatus(agentDeposit.getId());
     }
 
-    public void fetchPastDeposits(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode, @Header("dateRange") String dateRange,final Exchange e)
+    public void fetchPastDeposits(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode, @Header("from") String start,@Header("to") String end,final Exchange e)
     {
-        String[] dates = dateRange.split(" to ");
-        LocalDate start = LocalDate.parse(dates[0].trim());
-        LocalDate end = LocalDate.parse(dates[1].trim());
+        LocalDate startDate = LocalDate.parse(start);
+        LocalDate endDate = LocalDate.parse(end);
 
-        List<AgentDeposit> agentDeposit=agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode,bankCode,start,end);
+        List<AgentDeposit> agentDeposit=agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode,bankCode,startDate,endDate);
+
 
         if(!agentDeposit.isEmpty())
         {
-            List<AgentDepositResponse> agentDepositResponseList = agentDeposit.stream().map(tr -> {
-                AgentDepositResponse agentDepositResponse=new AgentDepositResponse();
+            List<FetchPastDepositsResponse> agentDepositResponseList = agentDeposit.stream().map(tr -> {
+                 FetchPastDepositsResponse agentDepositResponse=new FetchPastDepositsResponse();
+                 agentDepositResponse.setDepositId(tr.getId());
                 agentDepositResponse.setAgentCode(tr.getAgentCode());
                 agentDepositResponse.setBankCode(tr.getBankCode());
-                agentDepositResponse.setDepositedDate(tr.getDepositDate().toString());
-                agentDepositResponse.setTotalCollectedAmount(BigDecimal.valueOf(tr.getDepositingAmount()));
+                agentDepositResponse.setDepositDate(tr.getDepositDate().toString());
+                agentDepositResponse.setTotalDepositedAmount(tr.getDepositingAmount());
                         return agentDepositResponse;
                     })
                     .collect(Collectors.toList());

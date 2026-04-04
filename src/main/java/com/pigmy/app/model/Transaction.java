@@ -51,4 +51,7 @@ public class Transaction {
     @Column
     private Integer accountNumber;
 
+    @Column
+    private String schemeId;
+
 }

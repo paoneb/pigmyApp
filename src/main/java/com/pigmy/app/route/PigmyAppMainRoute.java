@@ -73,13 +73,16 @@ public class PigmyAppMainRoute extends RouteBuilder {
              .get("/pastDeposits")
              .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
              .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
-             .param().name("dateRange").type(RestParamType.query).dataType("String").required(true).endParam()
+             .param().name("from").type(RestParamType.query).dataType("String").required(true).endParam()
+             .param().name("to").type(RestParamType.query).dataType("String").required(true).endParam()
              .to("direct:fetchPastDeposits")
 
               .get("/export")
+                .param().name("depositId").type(RestParamType.query).dataType("long").required(true).endParam()
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
-                .param().name("dateRange").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("date").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("depositedAmount").type(RestParamType.query).dataType("double").required(true).endParam()
                 .to("direct:exportDeposits");
 
 

@@ -4,17 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
-import java.math.BigDecimal;
-import java.util.List;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class AgentDepositResponse {
+public class FetchPastDepositsResponse {
 
+    private long depositId;
     private Integer agentCode;
     private String bankCode;
-    private BigDecimal totalDepositedAmount;
-    private String depositedDate;
-    private List<UserCollection> users;
+    private String depositDate;
+    private double totalDepositedAmount;
 
 }

@@ -12,6 +12,8 @@ public class FetchTransactionResponse {
     private Integer accountNumber;
     private String customerName;
     private Double collectedAmount;
+    private String schemeName;
+    private String status;
 
 
 }

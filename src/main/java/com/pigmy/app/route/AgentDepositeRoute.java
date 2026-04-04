@@ -52,7 +52,7 @@ public class AgentDepositeRoute extends RouteBuilder {
         from("direct:exportDeposits")
                 .routeId("exportDepositsRouteID")
                 .log(LoggingLevel.INFO,"export deposit request: ${body}")
-                .bean("agentService","fetchPastAgentDeposit")
+               // .bean("agentService","fetchPastAgentDeposit")
                 .bean("transactionService","fetchPastTransaction");
 
     }

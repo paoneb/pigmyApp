@@ -18,11 +18,11 @@ public interface AgentDepositRepo extends JpaRepository<AgentDeposit,Integer> {
    int updateAgentDesositStatus(long id);
 
 
-    @Query("SELECT c FROM AgentDeposit c WHERE c.agentCode = :agentCode AND c.bankCode = :bankCode AND c.depositDate BETWEEN :start AND :end  AND c.depositStatus = 'SUCCESS'")
+    @Query("SELECT c FROM AgentDeposit c WHERE c.agentCode = :agentCode AND c.bankCode = :bankCode AND c.depositDate BETWEEN :startDate AND :endDate  AND c.depositStatus = 'SUCCESS'")
     List<AgentDeposit> findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(Integer agentCode,
                                                                                String bankCode,
-                                                                               LocalDate start,
-                                                                               LocalDate end);
+                                                                               LocalDate startDate,
+                                                                               LocalDate endDate);
 
     @Query("SELECT c FROM AgentDeposit c WHERE c.agentCode = :agentCode AND c.bankCode = :bankCode AND c.depositDate = :pastDate AND c.depositStatus = 'SUCCESS'")
     AgentDeposit findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(Integer agentCode,
