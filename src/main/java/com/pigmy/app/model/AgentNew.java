@@ -27,8 +27,7 @@ public class AgentNew {
 
     @Column(name="agent_address")
     private String address;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    
     private String password;
     private String phone;
     private String email;
