@@ -1,14 +1,9 @@
 package com.pigmy.app.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "user")

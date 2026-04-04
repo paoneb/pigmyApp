@@ -2,7 +2,6 @@ package com.pigmy.app.serviceactivators;
 
 import com.pigmy.app.model.AdminLogin;
 import com.pigmy.app.repository.AdminLoginRepo;
-import com.pigmy.app.repository.UserRepo;
 import org.apache.camel.Exchange;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

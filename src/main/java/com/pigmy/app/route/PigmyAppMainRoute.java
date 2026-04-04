@@ -68,7 +68,21 @@ public class PigmyAppMainRoute extends RouteBuilder {
              .param().name("bankCode").type(RestParamType.query).dataType("String").required(false).endParam()
              .type(AgentNew.class)
              .outType(CreateAgentResponse.class)
-             .to("direct:fetchAgents");
+             .to("direct:fetchAgents")
+
+             .get("/pastDeposits")
+             .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
+             .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+             .param().name("dateRange").type(RestParamType.query).dataType("String").required(true).endParam()
+             .to("direct:fetchPastDeposits")
+
+              .get("/export")
+                .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
+                .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("dateRange").type(RestParamType.query).dataType("String").required(true).endParam()
+                .to("direct:exportDeposits");
+
+
 
         rest(transactionPath)
                 .consumes("application/json").produces("application/json")

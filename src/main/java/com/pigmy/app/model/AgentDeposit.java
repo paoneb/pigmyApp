@@ -1,15 +1,12 @@
 package com.pigmy.app.model;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Table(name="agents_deposit")
@@ -39,5 +36,11 @@ public class AgentDeposit {
 
     @Column
     private String bankCode;
+
+    @Column
+    private String depositStatus;
+
+    @Column
+    private String agentName;
 
 }

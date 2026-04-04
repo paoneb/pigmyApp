@@ -29,7 +29,10 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .bean("agentService","agentDeposit")
                 .choice()
                 .when(simple("${exchangeProperty.agentDepositedSuccess} != null"))
-                .bean("transactionService","agentDepositingWithDate");
+                .bean("transactionService","agentDepositingWithDate")
+                .choice()
+                .when(simple("${exchangeProperty.saveTotransaction} == true"))
+                .bean("agentService","updateStatus");
 
 
         from("direct:agentMultipleDeposit")
@@ -40,8 +43,17 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .bean("agentService","agentMultipleDeposit")
                 .choice()
                 .when(simple("${exchangeProperty.agentDepositedMultipleDateSuccess} != null"))
-                .bean("transactionService","agentDepositingWithMultipleDate");
+                .bean("transactionService","agentDepositingWithMultipleDate")
+                .choice()
+                .when(simple("${exchangeProperty.saveTotransaction} == true"))
+                .bean("agentService","updateStatus");
 
+
+        from("direct:exportDeposits")
+                .routeId("exportDepositsRouteID")
+                .log(LoggingLevel.INFO,"export deposit request: ${body}")
+                .bean("agentService","fetchPastAgentDeposit")
+                .bean("transactionService","fetchPastTransaction");
 
     }
 }
