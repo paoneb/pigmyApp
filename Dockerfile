@@ -1,12 +1,18 @@
-# Use an official OpenJDK runtime as base image
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jdk AS build
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy JAR file into container
-COPY target/pigmyApp-0.0.1-SNAPSHOT.jar app.jar
-# Run the application
-EXPOSE 1002
+COPY . .
+
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
+
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
