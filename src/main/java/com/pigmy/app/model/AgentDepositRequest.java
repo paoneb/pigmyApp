@@ -19,7 +19,8 @@ public class AgentDepositRequest {
     private String bankCode;
     private double depositingAmount;
     private String voucherId;
-    private String dateOfCollectedAmount;
+    private String from;
+    private String to;
     private LocalDate depositDate;
 
 }

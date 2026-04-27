@@ -1,9 +1,6 @@
 package com.pigmy.app.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
@@ -18,6 +15,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@JsonPropertyOrder({ "name", "agentCode", "bankCode",  "phone", "email",  "status", "type", "password" ,"address", "limitAmount",})
 public class AgentNew {
 
     @Id
@@ -29,8 +27,7 @@ public class AgentNew {
 
     @Column(name="agent_address")
     private String address;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    
     private String password;
     private String phone;
     private String email;
@@ -44,18 +41,4 @@ public class AgentNew {
     private String type;
     private long limitAmount;
     private String status;
-
-
-    @OneToMany(mappedBy = "agents")
-    @JsonIgnore
-    private List<Transaction> transactions ;
-
-    @OneToMany(mappedBy = "agents")
-    @JsonIgnore
-    private List<User> user ;
-
-    @OneToMany(mappedBy = "agents")
-    @JsonIgnore
-    private List<AgentDeposit> agentDeposits;
-
 }

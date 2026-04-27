@@ -1,14 +1,12 @@
 package com.pigmy.app.model;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Table(name="agents_deposit")
@@ -27,23 +25,22 @@ public class AgentDeposit {
     @Column(name = "voucher_id")
     private String voucherId;
 
+    @Column
     private String DateOfCollectedAmount;
 
     @Column(name = "deposit_date")
     private LocalDate depositDate;
 
+    @Column
+    private Integer agentCode;
 
-   // @OneToMany(mappedBy = "agentDeposit", cascade = CascadeType.ALL, orphanRemoval = true)
-    //@JsonIgnore
-    //private List<Transaction> transactions;
+    @Column
+    private String bankCode;
 
-    @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumns({
-            @JoinColumn(name="agent_code", referencedColumnName="agent_code"),
-            @JoinColumn(name="bank_code", referencedColumnName="bank_code"),
-            @JoinColumn(name="agent_name", referencedColumnName="agent_name")
-    })
-    @JsonIgnore
-    private AgentNew agents;
+    @Column
+    private String depositStatus;
+
+    @Column
+    private String agentName;
 
 }

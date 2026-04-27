@@ -18,5 +18,10 @@ public class FetchAgentsRoute extends RouteBuilder {
                 .log(LoggingLevel.INFO,"fetch agent request: ${body}")
                 .bean("agentService","fetchAgent");
 
+        from("direct:fetchPastDeposits")
+                .routeId("fetchPastDepositsId")
+                .log(LoggingLevel.INFO,"fetch past deposits request: ${body}")
+                .bean("agentService","fetchPastDeposits");
+
     }
 }

@@ -1,10 +1,13 @@
 package com.pigmy.app.serviceactivators;
 
 
-
-import com.pigmy.app.model.*;
+import com.pigmy.app.model.AgentDeposit;
+import com.pigmy.app.model.AgentDepositRequest;
+import com.pigmy.app.model.AgentNew;
+import com.pigmy.app.model.AgentUpdateRequest;
 import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
+import com.pigmy.app.model.response.FetchPastDepositsResponse;
 import com.pigmy.app.model.response.UserCollection;
 import com.pigmy.app.repository.AgentDepositRepo;
 import com.pigmy.app.repository.AgentRepo;
@@ -12,23 +15,16 @@ import com.pigmy.app.repository.TransactionRepo;
 import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
-import org.aspectj.weaver.loadtime.Agent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component("agentService")
@@ -119,11 +115,14 @@ public class AgentService {
         LOGGER.info("agent deposit request received agentCode: {}, bankCode: {}",agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode());
         AgentDeposit agd=new AgentDeposit();
 
-        agd.setAgents(agent);
+        agd.setAgentCode(agentDepositrequest.getAgentCode());
+        agd.setBankCode(agentDepositrequest.getBankCode());
         agd.setDepositingAmount(agentDepositrequest.getDepositingAmount());
         agd.setVoucherId(agentDepositrequest.getVoucherId());
         agd.setDepositDate(LocalDate.now());
-        agd.setDateOfCollectedAmount(agentDepositrequest.getDateOfCollectedAmount());
+       // agd.setDateOfCollectedAmount(agentDepositrequest.getDateOfCollectedAmount());
+        agd.setDepositStatus("Progressing");
+        agd.setAgentName(agentDepositrequest.getName());
 
         AgentDeposit agentDepositedOK= agentDepositRepo.save(agd);
         e.setProperty("agentDepositedSuccess",agentDepositedOK);
@@ -132,21 +131,23 @@ public class AgentService {
 
     public void agentMultipleDeposit(@Body AgentDepositRequest agentDepositrequest,final Exchange e)
     {
-        String[] dates = agentDepositrequest.getDateOfCollectedAmount().split(" to ");
-        LocalDate start = LocalDate.parse(dates[0].trim());
-        LocalDate end = LocalDate.parse(dates[1].trim());
         AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode())
                 .orElseThrow(() -> new RuntimeException("Agent not found"));
 
         LOGGER.info("agent deposit multiple date request received agentCode: {}, bankCode: {}",agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode());
 
+        String collectedDate=agentDepositrequest.getFrom() +"to" +agentDepositrequest.getTo();
+
         AgentDeposit agd=new AgentDeposit();
 
-        agd.setAgents(agent);
+        agd.setAgentCode(agentDepositrequest.getAgentCode());
+        agd.setBankCode(agentDepositrequest.getBankCode());
         agd.setDepositingAmount(agentDepositrequest.getDepositingAmount());
         agd.setVoucherId(agentDepositrequest.getVoucherId());
         agd.setDepositDate(LocalDate.now());
-        agd.setDateOfCollectedAmount(agentDepositrequest.getDateOfCollectedAmount());
+        agd.setDateOfCollectedAmount(collectedDate);
+        agd.setDepositStatus("Progressing");
+        agd.setAgentName(agentDepositrequest.getName());
 
         AgentDeposit agentDepositedMultipleDateOK= agentDepositRepo.save(agd);
         e.setProperty("agentDepositedMultipleDateSuccess",agentDepositedMultipleDateOK);
@@ -154,4 +155,46 @@ public class AgentService {
     }
 
 
-}
+
+    public void updateStatus(final Exchange e)
+    {
+        final AgentDeposit agentDeposit = e.getProperty("agentDepositedMultipleDateSuccess", AgentDeposit.class);
+        agentDepositRepo.updateAgentDesositStatus(agentDeposit.getId());
+    }
+
+    public void fetchPastDeposits(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode, @Header("from") String start,@Header("to") String end,final Exchange e)
+    {
+        LocalDate startDate = LocalDate.parse(start);
+        LocalDate endDate = LocalDate.parse(end);
+
+        List<AgentDeposit> agentDeposit=agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode,bankCode,startDate,endDate);
+
+
+        if(!agentDeposit.isEmpty())
+        {
+            List<FetchPastDepositsResponse> agentDepositResponseList = agentDeposit.stream().map(tr -> {
+                 FetchPastDepositsResponse agentDepositResponse=new FetchPastDepositsResponse();
+                 agentDepositResponse.setDepositId(tr.getId());
+                agentDepositResponse.setAgentCode(tr.getAgentCode());
+                agentDepositResponse.setBankCode(tr.getBankCode());
+                agentDepositResponse.setDepositDate(tr.getDepositDate().toString());
+                agentDepositResponse.setTotalDepositedAmount(tr.getDepositingAmount());
+                        return agentDepositResponse;
+                    })
+                    .collect(Collectors.toList());
+
+            e.getIn().setBody(agentDepositResponseList);
+        }
+    }
+
+
+
+      public void fetchPastAgentDeposit(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode, @Header("dateRange") String dateRange,final Exchange e)
+    {
+
+        AgentDeposit agentDeposit=agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode,bankCode,LocalDate.parse(dateRange));
+
+            e.setProperty("pastDeposit",agentDeposit);
+        }
+    }
+

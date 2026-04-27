@@ -68,31 +68,34 @@ public class PigmyAppMainRoute extends RouteBuilder {
              .param().name("bankCode").type(RestParamType.query).dataType("String").required(false).endParam()
              .type(AgentNew.class)
              .outType(CreateAgentResponse.class)
-             .to("direct:fetchAgents");
+             .to("direct:fetchAgents")
+
+             .get("/pastDeposits")
+             .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
+             .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+             .param().name("from").type(RestParamType.query).dataType("String").required(true).endParam()
+             .param().name("to").type(RestParamType.query).dataType("String").required(true).endParam()
+             .to("direct:fetchPastDeposits")
+
+              .get("/export")
+                .param().name("depositId").type(RestParamType.query).dataType("long").required(true).endParam()
+                .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
+                .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("date").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("depositedAmount").type(RestParamType.query).dataType("double").required(true).endParam()
+                .to("direct:exportDeposits");
+
+
 
         rest(transactionPath)
                 .consumes("application/json").produces("application/json")
                 .get()
                 .description("fetch transaction details based on agentCode")
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
-                .param().name("dateRange").type(RestParamType.query).dataType("LocalDate").required(true).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("date").type(RestParamType.query).dataType("LocalDate").required(true).endParam()
                 .type(Transaction.class)
                 .to("direct:fetchTransaction")
-
-                .post()
-                .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
-                .param().name("userId").type(RestParamType.query).dataType("Long").required(true).endParam()
-                .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
-                .param().name("depositAmount").type(RestParamType.query).dataType("Double").required(true).endParam()
-                .param().name("depositeDate").type(RestParamType.query).dataType("Date").required(false).endParam()
-                .param().name("schemename").type(RestParamType.query).dataType("String").required(true).endParam()
-                .param().name("ledgergroup").type(RestParamType.query).dataType("String").required(true).endParam()
-                .param().name("collectiontype").type(RestParamType.query).dataType("String").required(true).endParam()
-                .param().name("customername").type(RestParamType.query).dataType("String").required(false).endParam()
-                .description("add transaction details based on agentCode")
-                .type(Transaction.class)
-                .to("direct:addDeposit")
 
                 .delete()
                 .param().name("transactionId").type(RestParamType.query).dataType("Long").required(true).endParam()
