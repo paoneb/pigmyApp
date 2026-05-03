@@ -244,7 +244,7 @@ public class TransactionService {
             List<UserCollection> userCollections = transactions.stream()
                     .map(tr -> {
                         UserCollection l = new UserCollection();
-                        l.setSchemeId(tr.getSchemename());
+                        l.setSchemeId(tr.getSchemeId());
                         l.setAccountNumber(tr.getAccountNumber());
                         l.setCollectedAmount(BigDecimal.valueOf(tr.getCollectedAmount()).setScale(0, RoundingMode.UNNECESSARY));
                         l.setCustomerName(tr.getCustomerName());
