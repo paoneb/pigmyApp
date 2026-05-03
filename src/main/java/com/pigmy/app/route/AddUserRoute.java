@@ -10,10 +10,11 @@ public class AddUserRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         onException(Exception.class)
-                .log(LoggingLevel.ERROR, "An error occurred while adding users - ${exception.message}")
+                .handled(true)
+                .log(LoggingLevel.ERROR,"An error occured while add/fetch/upload user- ${exception.message}")
                 .logStackTrace(true)
-                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
-                .setBody(simple("${exception.message}"));
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500)) // or 500
+                .setBody(simple("{\"error\":\"${exception.message}\"}"));
 
 
 
@@ -27,6 +28,16 @@ public class AddUserRoute extends RouteBuilder {
                 .routeId("fetchCustomersRouteId")
                 .log(LoggingLevel.INFO,"fetch User request: ${body}")
                 .bean("addUserService","fetchCustomers");
+
+        from("direct:addCustomersMobileNumber")
+                .routeId("addCustomersMobileNumberRouteId")
+                .log(LoggingLevel.INFO,"addCustomers MobileNumber request: ${body}")
+                .bean("addUserService","addMobileNumberService");
+
+        from("direct:updateCustomersMobileNumber")
+                .routeId("updateCustomersMobileNumberRouteId")
+                .log(LoggingLevel.INFO,"update Customers MobileNumber request: ${body}")
+                .bean("addUserService","updateCustomersMobileNumber");
 
     }
 }

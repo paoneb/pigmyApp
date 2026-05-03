@@ -114,7 +114,18 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(false).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(false).endParam()
                 .type(UserData.class)
-                .to("direct:fetchCustomers");
+                .to("direct:fetchCustomers")
+
+
+                .post("/upload/mobilenumbers")
+                .type(UploadMobileNumberRequest.class)
+                .to("direct:addCustomersMobileNumber")
+
+
+                .patch("/updateMobileNumber")
+                .param().name("userId").type(RestParamType.query).dataType("long").required(true).endParam()
+                .param().name("mobilenumber").type(RestParamType.query).dataType("String").required(true).endParam()
+                .to("direct:updateCustomersMobileNumber");
 
         rest(adminLogin)
                 .consumes("application/json").produces("application/json")
