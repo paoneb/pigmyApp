@@ -14,7 +14,12 @@ import lombok.Data;
 public class UploadMobileNumber {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "customerdetails_seq")
+    @SequenceGenerator(
+            name = "customerdetails_seq",
+            sequenceName = "customerdetails_seq",
+            allocationSize = 100 // must match batch_size
+    )
     private Long id;
 
     @Column(name = "bank_code")

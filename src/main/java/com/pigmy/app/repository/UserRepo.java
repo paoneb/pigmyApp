@@ -1,6 +1,7 @@
 package com.pigmy.app.repository;
 
 import com.pigmy.app.model.Transaction;
+import com.pigmy.app.model.UploadMobileNumber;
 import com.pigmy.app.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,7 +14,9 @@ import java.util.Optional;
 
 public interface UserRepo extends JpaRepository<User,Long> {
 
-    Optional<User> findByAccountNumberAndBankCode(Integer accountNumber,String bankCode);
+    //Optional<User> findByAccountNumberAndBankCode(Integer accountNumber,String bankCode);
+
+    List<User> findByAccountNumberInAndBankCode(List<Integer> accountNumbers, String bankCode);
 
     @Modifying
     @Transactional
