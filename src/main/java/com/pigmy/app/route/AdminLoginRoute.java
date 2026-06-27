@@ -3,6 +3,7 @@ package com.pigmy.app.route;
 import com.pigmy.app.config.JwtUtil;
 import com.pigmy.app.model.LoginRequest;
 import com.pigmy.app.model.LoginResponse;
+import com.pigmy.app.model.SubBranchDTO;
 import com.pigmy.app.repository.AgentRepo;
 import com.pigmy.app.serviceactivators.AuthAdminService;
 import org.apache.camel.Exchange;
@@ -10,6 +11,8 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 
 @Component
@@ -38,8 +41,7 @@ public class AdminLoginRoute extends RouteBuilder {
 
                     if (adminService.validate(req.getUserName(), req.getPassword(), req.getBankCode(),exchange)) {
                         String token = jwtUtil.generateToken(req.getUserName(), req.getBankCode());
-                        exchange.getMessage().setBody(new LoginResponse(exchange.getProperty("bankName").toString(),req.getBankCode(), token));
-                        System.out.println("logged in");
+                        exchange.getMessage().setBody(new LoginResponse(exchange.getProperty("bankName").toString(),req.getBankCode(), token,exchange.getProperty("city").toString(), (List<SubBranchDTO>) exchange.getProperty("subBranches")));
                     } else {
                         exchange.getMessage().setHeader("CamelHttpResponseCode", 401);
                         exchange.getMessage().setBody("Invalid credentials");

@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -106,27 +108,6 @@ public class AgentService {
             e.getIn().setBody(multipleAgents);
         }
 
-    }
-
-    public void agentDeposit(@Body AgentDepositRequest agentDepositrequest,final Exchange e)
-    {
-        AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode())
-                .orElseThrow(() -> new RuntimeException("Agent not found"));
-        LOGGER.info("agent deposit request received agentCode: {}, bankCode: {}",agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode());
-        AgentDeposit agd=new AgentDeposit();
-
-        agd.setAgentCode(agentDepositrequest.getAgentCode());
-        agd.setBankCode(agentDepositrequest.getBankCode());
-        agd.setDepositingAmount(agentDepositrequest.getDepositingAmount());
-        agd.setVoucherId(agentDepositrequest.getVoucherId());
-        agd.setDepositDate(LocalDate.now());
-       // agd.setDateOfCollectedAmount(agentDepositrequest.getDateOfCollectedAmount());
-        agd.setDepositStatus("Progressing");
-        agd.setAgentName(agentDepositrequest.getName());
-
-        AgentDeposit agentDepositedOK= agentDepositRepo.save(agd);
-        e.setProperty("agentDepositedSuccess",agentDepositedOK);
-        LOGGER.info("updated agent deposit details",agentDepositedOK.getId());
     }
 
     public void agentMultipleDeposit(@Body AgentDepositRequest agentDepositrequest,final Exchange e)

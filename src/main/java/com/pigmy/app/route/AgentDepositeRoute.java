@@ -21,25 +21,12 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .setBody(simple("{\"error\":\"${exception.message}\"}"));
 
 
-        from("direct:agentDeposit")
-                .routeId(AgentDepositeRoute.class.getSimpleName())
-                .log(LoggingLevel.INFO,"agent deposit request: ${body}")
-                .setProperty("AgentDepositRequest",body())
-                .bean("transactionService","validateDepositingAmount")
-                .bean("agentService","agentDeposit")
-                .choice()
-                .when(simple("${exchangeProperty.agentDepositedSuccess} != null"))
-                .bean("transactionService","agentDepositingWithDate")
-                .choice()
-                .when(simple("${exchangeProperty.saveTotransaction} == true"))
-                .bean("agentService","updateStatus");
-
-
         from("direct:agentMultipleDeposit")
                 .routeId("agentMultipleDepositRouteID")
                 .log(LoggingLevel.INFO,"agent deposit multiple request: ${body}")
                 .setProperty("AgentDepositMultipleDatesRequest",body())
                 .bean("transactionService","validateDepositingAmountMultipleDate")
+                .transacted()
                 .bean("agentService","agentMultipleDeposit")
                 .choice()
                 .when(simple("${exchangeProperty.agentDepositedMultipleDateSuccess} != null"))

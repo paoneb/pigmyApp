@@ -3,6 +3,7 @@ package com.pigmy.app.route;
 import com.pigmy.app.model.*;
 import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
+import com.pigmy.app.model.response.SearchTransactionResponse;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.camel.model.rest.RestParamType;
@@ -44,12 +45,6 @@ public class PigmyAppMainRoute extends RouteBuilder {
              .outType(CreateAgentResponse.class)
              .to("direct:createNewAgent")
 
-             .post("/deposit/singleDate")
-             .description("agent depositing amount")
-             .type(AgentDepositRequest.class)
-             .outType(AgentDepositResponse.class)
-             .to("direct:agentDeposit")
-
              .post("/deposit/multipleDate")
              .description("agent depositing amount")
              .type(AgentDepositRequest.class)
@@ -77,7 +72,7 @@ public class PigmyAppMainRoute extends RouteBuilder {
              .param().name("to").type(RestParamType.query).dataType("String").required(true).endParam()
              .to("direct:fetchPastDeposits")
 
-              .get("/export")
+             .get("/export")
                 .param().name("depositId").type(RestParamType.query).dataType("long").required(true).endParam()
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
@@ -101,7 +96,19 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .param().name("transactionId").type(RestParamType.query).dataType("Long").required(true).endParam()
                 .description("delete transaction details based on agentCode")
                 .type(Transaction.class)
-                .to("direct:deleteTransaction");
+                .to("direct:deleteTransaction")
+
+
+                .get("/search")
+                //.param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
+                .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("from").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("to").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("agent").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("schemeType").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("collectionStatus").type(RestParamType.query).dataType("String").required(true).endParam()
+                .type(SearchTransactionResponse.class)
+                .to("direct:searchTransaction");
 
         rest(userPath)
                 .consumes("application/json").produces("application/json")

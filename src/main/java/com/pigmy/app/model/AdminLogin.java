@@ -5,7 +5,7 @@ import lombok.Data;
 
 
 @Data
-@Table(name = "adminWeb")
+@Table(name = "admin_web")
 @Entity
 public class AdminLogin{
 
@@ -17,5 +17,8 @@ public class AdminLogin{
     private String password;
     private String bankCode;
     private String bankName;
+    private boolean isMainBranch;
+    private String parentId;
+    private String city;
 
 }

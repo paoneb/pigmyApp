@@ -54,4 +54,7 @@ public class Transaction {
     @Column
     private String schemeId;
 
+    @Column
+    private String agentname;
+
 }
