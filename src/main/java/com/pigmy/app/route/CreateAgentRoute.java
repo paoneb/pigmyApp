@@ -22,6 +22,11 @@ public class CreateAgentRoute extends RouteBuilder {
                 .routeId(CreateAgentRoute.class.getSimpleName())
                 .log(LoggingLevel.INFO, "create new agent request: ${body}")
                 .bean("agentService", "saveAgent");
+
+         from("direct:revokeAgentAccess")
+                .routeId("revokeAgentAccessRouteId")
+                .log(LoggingLevel.INFO, "Revoke agent access request: ${body}")
+                .bean("agentService", "revokeAgentAccess");
     }
 
 }

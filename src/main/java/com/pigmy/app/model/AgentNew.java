@@ -40,5 +40,6 @@ public class AgentNew {
     private String bankCode;
     private String type;
     private long limitAmount;
+    private int graceDays;
     private String status;
 }

@@ -78,9 +78,12 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("date").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("depositedAmount").type(RestParamType.query).dataType("double").required(true).endParam()
-                .to("direct:exportDeposits");
+                .to("direct:exportDeposits")
 
-
+             .delete("/revoke")
+                .param().name("mobileNumber").type(RestParamType.query).dataType("String").required(true).endParam()
+                .description("revoke agent access")
+                .to("direct:revokeAgentAccess");
 
         rest(transactionPath)
                 .consumes("application/json").produces("application/json")

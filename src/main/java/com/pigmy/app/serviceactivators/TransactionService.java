@@ -91,7 +91,6 @@ public class TransactionService {
                     .agentName(k.getAgentname()).build();
             searchrs.add(response);
         }
-     System.out.println(searchrs.get(0).toString());
         return searchrs;
     }
 
@@ -113,11 +112,6 @@ public class TransactionService {
         if (agentDeposit.getId() != null) {
             List<Transaction> transactions = exchange.getProperty("transactionDetailsMultipleDates", List.class);
 
-            // Update status
-        /*    transactions.forEach(tx -> {
-                tx.setStatus("Deposited");
-                tx.setAgentDepositId(agentDeposit.getId());
-            });*/
 
             List<Long> ids = transactions.stream()
                     .map(Transaction::getId)
@@ -126,14 +120,10 @@ public class TransactionService {
            int updatedCount=  transactionRepoRepo.bulkUpdateTransactions(
                     "Deposited",
                     agentDeposit.getId(),
-                    transactions.stream().map(Transaction::getId).toList()
-            );
-
-            // Save back (bulk save)
-          //  List<Transaction> trn = transactionRepoRepo.saveAll(transactions);
+                    ids);
 
 
-            if (!transactions.isEmpty()) {
+            if (!transactions.isEmpty() && updatedCount!=0 ) {
                 List<UserCollection> userCollections = transactions.stream()
                         .map(tr -> {
                             UserCollection l = new UserCollection();
@@ -170,7 +160,6 @@ public class TransactionService {
     public void validateDepositingAmountMultipleDate(final Exchange exchange) {
         final AgentDepositRequest agentDepositrequest = exchange.getProperty("AgentDepositMultipleDatesRequest", AgentDepositRequest.class);
 
-        //String[] dates = agentDepositrequest.getDateOfCollectedAmount().toString().split(" to ");
         LocalDate start = LocalDate.parse(agentDepositrequest.getFrom());
         LocalDate end = LocalDate.parse(agentDepositrequest.getTo());
         List<Transaction> transactions = transactionRepoRepo.findByAgentCodeAndBankCodeAndCollectedDateRangeAndstatus(agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode(), start, end);

@@ -11,6 +11,7 @@ import com.pigmy.app.model.response.FetchPastDepositsResponse;
 import com.pigmy.app.model.response.UserCollection;
 import com.pigmy.app.repository.AgentDepositRepo;
 import com.pigmy.app.repository.AgentRepo;
+import com.pigmy.app.repository.RefreshTokenRepo;
 import com.pigmy.app.repository.TransactionRepo;
 import org.apache.camel.Body;
 import org.apache.camel.Exchange;
@@ -40,6 +41,9 @@ public class AgentService {
 
     @Autowired
     private TransactionRepo transactionRepo;
+
+    @Autowired
+    private RefreshTokenRepo refreshTokenRepo;
 
     private final Logger LOGGER= LoggerFactory.getLogger(AgentService.class);
 
@@ -176,6 +180,21 @@ public class AgentService {
         AgentDeposit agentDeposit=agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode,bankCode,LocalDate.parse(dateRange));
 
             e.setProperty("pastDeposit",agentDeposit);
+        }
+
+
+        public ResponseEntity<String> revokeAgentAccess(@Header("mobileNumber") final String mobileNumber, final Exchange e)
+        {
+           long deletedCount= refreshTokenRepo.deleteByMobileNumber(mobileNumber);
+
+            if (deletedCount > 0) {
+                LOGGER.info("Revoked access for mobile number: {}", mobileNumber);
+            } else {
+                LOGGER.warn("No refresh token found for mobile number: {}", mobileNumber);
+                throw new RuntimeException("No refresh token found for mobile number: " + mobileNumber);
+            }
+
+            return ResponseEntity.ok("Agent access revoked successfully");
         }
     }
 
