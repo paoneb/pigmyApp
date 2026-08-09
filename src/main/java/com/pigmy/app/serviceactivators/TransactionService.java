@@ -95,10 +95,10 @@ public class TransactionService {
     }
 
     public ResponseEntity deleteTransaction(@Header("transactionId") final long id, final Exchange e) {
-        if (!transactionRepoRepo.existsById(id)) {
+        int updated = transactionRepoRepo.markTransactionAsVoid(id);
+        if (updated == 0) {
             throw new RuntimeException("Transaction not found with id: " + id);
         }
-        transactionRepoRepo.deleteById(id);
         return ResponseEntity.ok("Transaction deleted successfully");
 
 

@@ -35,4 +35,11 @@ public interface TransactionRepo extends JpaRepository<Transaction,Long> {
                                @Param("depositId") Long depositId,
                                @Param("ids") List<Long> ids);
 
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Transaction t SET t.status = 'Void' WHERE t.id = :id")
+    int markTransactionAsVoid(@Param("id") Long id);
+
+
 }
