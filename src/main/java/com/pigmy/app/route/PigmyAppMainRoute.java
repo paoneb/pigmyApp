@@ -28,6 +28,10 @@ public class PigmyAppMainRoute extends RouteBuilder {
     @Value("${admin.login.path}")
     private String adminLogin;
 
+
+    @Value("${dashboard.path}")
+    private String dashboard;
+
     @Override
     public void configure() throws Exception {
         restConfiguration()
@@ -142,6 +146,13 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .post()
                 .type(LoginRequest.class)
                 .to("direct:loginAdmin");
+
+
+        rest(dashboard)
+                .consumes("application/json").produces("application/json")
+                .get()
+                .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+                .to("direct:fetchDashboardData");
 
 
     }

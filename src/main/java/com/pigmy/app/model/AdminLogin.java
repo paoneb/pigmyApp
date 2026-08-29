@@ -3,6 +3,8 @@ package com.pigmy.app.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 
 @Data
 @Table(name = "admin_web")
@@ -20,5 +22,7 @@ public class AdminLogin{
     private boolean isMainBranch;
     private String parentId;
     private String city;
-
+    private String bankType;
+    private LocalDate purchaseDate;
+    private int graceDays;
 }

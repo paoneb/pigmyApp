@@ -28,9 +28,10 @@ public class AdminLoginRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         onException(Exception.class)
+                .handled(true)
                 .log(LoggingLevel.ERROR, "An error occurred while logging - ${exception.message}")
                 .logStackTrace(true)
-                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
                 .setBody(simple("${exception.message}"));
 
         from("direct:loginAdmin")
@@ -41,7 +42,7 @@ public class AdminLoginRoute extends RouteBuilder {
 
                     if (adminService.validate(req.getUserName(), req.getPassword(), req.getBankCode(),exchange)) {
                         String token = jwtUtil.generateToken(req.getUserName(), req.getBankCode());
-                        exchange.getMessage().setBody(new LoginResponse(exchange.getProperty("bankName").toString(),req.getBankCode(), token,exchange.getProperty("city").toString(), (List<SubBranchDTO>) exchange.getProperty("subBranches")));
+                        exchange.getMessage().setBody(new LoginResponse(exchange.getProperty("bankName").toString(),req.getBankCode(), token,exchange.getProperty("city").toString(), (List<SubBranchDTO>) exchange.getProperty("subBranches"),exchange.getProperty("bankType").toString()));
                     } else {
                         exchange.getMessage().setHeader("CamelHttpResponseCode", 401);
                         exchange.getMessage().setBody("Invalid credentials");

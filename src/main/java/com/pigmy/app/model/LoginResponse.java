@@ -16,5 +16,6 @@ public class LoginResponse {
     private String token;
     private String city;
     private List<SubBranchDTO> subBranches;
+    private String bankType;
 }
 

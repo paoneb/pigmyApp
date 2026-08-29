@@ -27,6 +27,11 @@ public class CreateAgentRoute extends RouteBuilder {
                 .routeId("revokeAgentAccessRouteId")
                 .log(LoggingLevel.INFO, "Revoke agent access request: ${body}")
                 .bean("agentService", "revokeAgentAccess");
+
+         from("direct:fetchDashboardData")
+                .routeId("fetchDashboardDataRouteId")
+                .log(LoggingLevel.INFO, "Fetch dashboard data request: ${body}")
+                .bean("authAdminService", "fetchDashboardData");
     }
 
 }

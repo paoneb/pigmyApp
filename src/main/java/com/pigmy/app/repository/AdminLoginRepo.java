@@ -15,4 +15,17 @@ public interface AdminLoginRepo extends JpaRepository<AdminLogin,Integer> {
             "FROM AdminLogin a WHERE a.parentId = :parentId")
     List<SubBranchDTO> findByParentId(String parentId);
 
+    @Query(
+            value = "SELECT " +
+                    "ad.purchase_date, " +
+                    "COUNT(a.id) AS active_agents_count " +
+                    "FROM (admin_web ad " +
+                    "INNER JOIN agents a " +
+                    "ON (ad.bank_code = a.bank_code)) " +
+                    "WHERE (a.status = 'Active') " +
+                    "GROUP BY ad.bank_code, ad.purchase_date",
+            nativeQuery = true
+    )
+    List<Object[]>  findByBankCode(String bankCode);
+
 }
