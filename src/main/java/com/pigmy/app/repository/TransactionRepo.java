@@ -30,7 +30,7 @@ public interface TransactionRepo extends JpaRepository<Transaction,Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE Transaction t SET t.status = :status, t.agentDepositId = :depositId WHERE t.id IN :ids")
+    @Query("UPDATE Transaction t SET t.status = :status, t.agentDepositId = :depositId , t.agentDepositedDate = CURRENT_DATE WHERE t.id IN :ids")
     int bulkUpdateTransactions(@Param("status") String status,
                                @Param("depositId") Long depositId,
                                @Param("ids") List<Long> ids);

@@ -1,9 +1,9 @@
-package com.pigmy.app.model;
+package com.pigmy.app.model.peocit;
 
 import lombok.Data;
 
 @Data
-public class UserList {
+public class PeocitUserList {
 
 
     private String customerName;

@@ -16,7 +16,12 @@ public class DeleteTransactionRoute extends RouteBuilder {
 
         from("direct:deleteTransaction")
                 .routeId(DeleteTransactionRoute.class.getSimpleName())
-                .log(LoggingLevel.INFO,"delete User request: ${body}")
-                .bean("transactionService","deleteTransaction");
+                .choice()
+                .when(header("bankType").isEqualTo("banksoft"))
+                .log(LoggingLevel.INFO,"delete banksoft transaction request: ${body}")
+                .bean("transactionService","deleteTransaction")
+                .when(header("bankType").isEqualTo("peocit"))
+                .log(LoggingLevel.INFO,"delete peocit transaction request: ${body}")
+                .bean("transactionService","deleteTransactionPeocit");
     }
 }

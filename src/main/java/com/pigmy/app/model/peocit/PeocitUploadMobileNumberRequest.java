@@ -1,20 +1,18 @@
-package com.pigmy.app.model.response;
+package com.pigmy.app.model.peocit;
+
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.pigmy.app.model.UserDetails;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.util.List;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class AgentDepositResponse {
-
-    private Integer agentCode;
+public class PeocitUploadMobileNumberRequest {
     private String bankCode;
-    private long totalDepositedAmount;
-    private String depositedDate;
-    private List<UserCollection> users;
+    private List<PeocitUserDetails> userDetailsList;
 
 }

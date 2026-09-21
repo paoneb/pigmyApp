@@ -5,14 +5,12 @@ import com.pigmy.app.model.AgentDeposit;
 import com.pigmy.app.model.AgentDepositRequest;
 import com.pigmy.app.model.AgentNew;
 import com.pigmy.app.model.AgentUpdateRequest;
+import com.pigmy.app.model.peocit.PeocitAgentDeposit;
 import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
 import com.pigmy.app.model.response.FetchPastDepositsResponse;
 import com.pigmy.app.model.response.UserCollection;
-import com.pigmy.app.repository.AgentDepositRepo;
-import com.pigmy.app.repository.AgentRepo;
-import com.pigmy.app.repository.RefreshTokenRepo;
-import com.pigmy.app.repository.TransactionRepo;
+import com.pigmy.app.repository.*;
 import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
@@ -40,19 +38,20 @@ public class AgentService {
     private AgentDepositRepo agentDepositRepo;
 
     @Autowired
+    private PeocitAgentDepositRepo peocitAgentDepositRepo;
+
+    @Autowired
     private TransactionRepo transactionRepo;
 
     @Autowired
     private RefreshTokenRepo refreshTokenRepo;
 
-    private final Logger LOGGER= LoggerFactory.getLogger(AgentService.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(AgentService.class);
 
-    public CreateAgentResponse saveAgent(@Body AgentNew agentRequestToCreate)
-    {
-        AgentNew createdNewAgent=  agentRepo.save(agentRequestToCreate);
-        CreateAgentResponse createAgentResponse=new CreateAgentResponse();
-        if(createdNewAgent.getAgentCode() != null)
-        {
+    public CreateAgentResponse saveAgent(@Body AgentNew agentRequestToCreate) {
+        AgentNew createdNewAgent = agentRepo.save(agentRequestToCreate);
+        CreateAgentResponse createAgentResponse = new CreateAgentResponse();
+        if (createdNewAgent.getAgentCode() != null) {
 
             createAgentResponse.setStatus("200");
             createAgentResponse.setMessage("successfully saved");
@@ -61,9 +60,7 @@ public class AgentService {
             createAgentResponse.setName(createdNewAgent.getName());
             createAgentResponse.setBankCode(createdNewAgent.getBankCode());
 
-        }
-        else
-        {
+        } else {
             LOGGER.warn("Not able to create new agent");
         }
         return createAgentResponse;
@@ -75,7 +72,7 @@ public class AgentService {
                 .orElseThrow(() -> new RuntimeException("Agent not found"));
 
         // Update only the fields you want
-        LOGGER.info("updating agent with agentCode: {}, bankCode: {}",updateAgent.getAgentCode(),updateAgent.getBankCode());
+        LOGGER.info("updating agent with agentCode: {}, bankCode: {}", updateAgent.getAgentCode(), updateAgent.getBankCode());
         existingAgent.setName(updateAgent.getName());
         existingAgent.setAddress(updateAgent.getAddress());
         existingAgent.setPhone(updateAgent.getPhone());
@@ -90,40 +87,37 @@ public class AgentService {
         agentRepo.save(existingAgent);
 
         return ResponseEntity.ok(
-               Map.of(
-                       "status", "success",
-                       "message", "Agent updated successfully"
-               )
-       );
+                Map.of(
+                        "status", "success",
+                        "message", "Agent updated successfully"
+                )
+        );
 
 
     }
 
-    public void fetchAgent(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode,final Exchange e)
-    {
-        if (agCode != null ) {
+    public void fetchAgent(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, final Exchange e) {
+        if (agCode != null) {
 
-            AgentNew singleAgent=agentRepo.findByAgentCodeAndBankCode(agCode,bankCode)
-                    .orElseThrow(()-> new RuntimeException("Agent not found"));
+            AgentNew singleAgent = agentRepo.findByAgentCodeAndBankCode(agCode, bankCode)
+                    .orElseThrow(() -> new RuntimeException("Agent not found"));
             e.getIn().setBody(singleAgent);
-        }
-        else {
-            List<AgentNew> multipleAgents=agentRepo.findAllAgentByBankCode(bankCode);
+        } else {
+            List<AgentNew> multipleAgents = agentRepo.findAllAgentByBankCode(bankCode);
             e.getIn().setBody(multipleAgents);
         }
 
     }
 
-    public void agentMultipleDeposit(@Body AgentDepositRequest agentDepositrequest,final Exchange e)
-    {
-        AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode())
+    public void agentMultipleDeposit(@Body AgentDepositRequest agentDepositrequest, final Exchange e) {
+        AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode())
                 .orElseThrow(() -> new RuntimeException("Agent not found"));
 
-        LOGGER.info("agent deposit multiple date request received agentCode: {}, bankCode: {}",agentDepositrequest.getAgentCode(),agentDepositrequest.getBankCode());
+        LOGGER.info("agent deposit multiple date request received agentCode: {}, bankCode: {}", agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode());
 
-        String collectedDate=agentDepositrequest.getFrom() +"to" +agentDepositrequest.getTo();
+        String collectedDate = agentDepositrequest.getFrom() + "to" + agentDepositrequest.getTo();
 
-        AgentDeposit agd=new AgentDeposit();
+        AgentDeposit agd = new AgentDeposit();
 
         agd.setAgentCode(agentDepositrequest.getAgentCode());
         agd.setBankCode(agentDepositrequest.getBankCode());
@@ -134,36 +128,61 @@ public class AgentService {
         agd.setDepositStatus("Progressing");
         agd.setAgentName(agentDepositrequest.getName());
 
-        AgentDeposit agentDepositedMultipleDateOK= agentDepositRepo.save(agd);
-        e.setProperty("agentDepositedMultipleDateSuccess",agentDepositedMultipleDateOK);
-        LOGGER.info("updated agent deposit details",agentDepositedMultipleDateOK.getId());
+        AgentDeposit agentDepositedMultipleDateOK = agentDepositRepo.save(agd);
+        e.setProperty("agentDepositedMultipleDateSuccess", agentDepositedMultipleDateOK);
+        LOGGER.info("updated agent deposit details", agentDepositedMultipleDateOK.getId());
+    }
+
+    public void agentMultipleDepositPeocit(@Body AgentDepositRequest agentDepositrequest, final Exchange e) {
+        AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode())
+                .orElseThrow(() -> new RuntimeException("Agent not found"));
+
+        LOGGER.info("peocit agent deposit multiple date request received agentCode: {}, bankCode: {}", agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode());
+
+        String collectedDate = agentDepositrequest.getFrom() + "to" + agentDepositrequest.getTo();
+
+        PeocitAgentDeposit peocitAgentDeposit = new PeocitAgentDeposit();
+
+        peocitAgentDeposit.setAgentCode(agentDepositrequest.getAgentCode());
+        peocitAgentDeposit.setBankCode(agentDepositrequest.getBankCode());
+        peocitAgentDeposit.setDepositingAmount(agentDepositrequest.getDepositingAmount());
+        peocitAgentDeposit.setVoucherId(agentDepositrequest.getVoucherId());
+        peocitAgentDeposit.setDepositDate(LocalDate.now());
+        peocitAgentDeposit.setDateOfCollectedAmount(collectedDate);
+        peocitAgentDeposit.setDepositStatus("Progressing");
+        peocitAgentDeposit.setAgentName(agentDepositrequest.getName());
+
+        PeocitAgentDeposit peocitAgentDepositedMultipleDateOK = peocitAgentDepositRepo.save(peocitAgentDeposit);
+        e.setProperty("PeocitAgentDepositedMultipleDateSuccess", peocitAgentDepositedMultipleDateOK);
+        LOGGER.info("updated peocit agent deposit details", peocitAgentDepositedMultipleDateOK.getId());
     }
 
 
-
-    public void updateStatus(final Exchange e)
-    {
+    public void updateStatus(final Exchange e) {
         final AgentDeposit agentDeposit = e.getProperty("agentDepositedMultipleDateSuccess", AgentDeposit.class);
         agentDepositRepo.updateAgentDesositStatus(agentDeposit.getId());
     }
 
-    public void fetchPastDeposits(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode, @Header("from") String start,@Header("to") String end,final Exchange e)
-    {
+    public void updatePeocitStatus(final Exchange e) {
+        final PeocitAgentDeposit peocitAgentDeposit = e.getProperty("PeocitAgentDepositedMultipleDateSuccess", PeocitAgentDeposit.class);
+        peocitAgentDepositRepo.updatePeocitAgentDesositStatus(peocitAgentDeposit.getId());
+    }
+
+    public void fetchPastDeposits(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("from") String start, @Header("to") String end, final Exchange e) {
         LocalDate startDate = LocalDate.parse(start);
         LocalDate endDate = LocalDate.parse(end);
 
-        List<AgentDeposit> agentDeposit=agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode,bankCode,startDate,endDate);
+        List<AgentDeposit> agentDeposit = agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode, bankCode, startDate, endDate);
 
 
-        if(!agentDeposit.isEmpty())
-        {
+        if (!agentDeposit.isEmpty()) {
             List<FetchPastDepositsResponse> agentDepositResponseList = agentDeposit.stream().map(tr -> {
-                 FetchPastDepositsResponse agentDepositResponse=new FetchPastDepositsResponse();
-                 agentDepositResponse.setDepositId(tr.getId());
-                agentDepositResponse.setAgentCode(tr.getAgentCode());
-                agentDepositResponse.setBankCode(tr.getBankCode());
-                agentDepositResponse.setDepositDate(tr.getDepositDate().toString());
-                agentDepositResponse.setTotalDepositedAmount(tr.getDepositingAmount());
+                        FetchPastDepositsResponse agentDepositResponse = new FetchPastDepositsResponse();
+                        agentDepositResponse.setDepositId(tr.getId());
+                        agentDepositResponse.setAgentCode(tr.getAgentCode());
+                        agentDepositResponse.setBankCode(tr.getBankCode());
+                        agentDepositResponse.setDepositDate(tr.getDepositDate().toString());
+                        agentDepositResponse.setTotalDepositedAmount(tr.getDepositingAmount());
                         return agentDepositResponse;
                     })
                     .collect(Collectors.toList());
@@ -173,28 +192,41 @@ public class AgentService {
     }
 
 
+    public void fetchPastDepositsPeocit(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("from") String start, @Header("to") String end, final Exchange e) {
+        LocalDate startDate = LocalDate.parse(start);
+        LocalDate endDate = LocalDate.parse(end);
 
-      public void fetchPastAgentDeposit(@Header("agentCode") final Integer agCode,@Header("bankCode") final String bankCode, @Header("dateRange") String dateRange,final Exchange e)
-    {
-
-        AgentDeposit agentDeposit=agentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode,bankCode,LocalDate.parse(dateRange));
-
-            e.setProperty("pastDeposit",agentDeposit);
-        }
+        List<PeocitAgentDeposit> peocitAgentDeposit = peocitAgentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode, bankCode, startDate, endDate);
 
 
-        public ResponseEntity<String> revokeAgentAccess(@Header("mobileNumber") final String mobileNumber, final Exchange e)
-        {
-           long deletedCount= refreshTokenRepo.deleteByMobileNumber(mobileNumber);
+        if (!peocitAgentDeposit.isEmpty()) {
+            List<FetchPastDepositsResponse> agentDepositResponseList = peocitAgentDeposit.stream().map(tr -> {
+                        FetchPastDepositsResponse agentDepositResponse = new FetchPastDepositsResponse();
+                        agentDepositResponse.setDepositId(tr.getId());
+                        agentDepositResponse.setAgentCode(tr.getAgentCode());
+                        agentDepositResponse.setBankCode(tr.getBankCode());
+                        agentDepositResponse.setDepositDate(tr.getDepositDate().toString());
+                        agentDepositResponse.setTotalDepositedAmount(tr.getDepositingAmount());
+                        return agentDepositResponse;
+                    })
+                    .collect(Collectors.toList());
 
-            if (deletedCount > 0) {
-                LOGGER.info("Revoked access for mobile number: {}", mobileNumber);
-            } else {
-                LOGGER.warn("No refresh token found for mobile number: {}", mobileNumber);
-                throw new RuntimeException("No refresh token found for mobile number: " + mobileNumber);
-            }
-
-            return ResponseEntity.ok("Agent access revoked successfully");
+            e.getIn().setBody(agentDepositResponseList);
         }
     }
+
+
+    public ResponseEntity<String> revokeAgentAccess(@Header("mobileNumber") final String mobileNumber, final Exchange e) {
+        long deletedCount = refreshTokenRepo.deleteByMobileNumber(mobileNumber);
+
+        if (deletedCount > 0) {
+            LOGGER.info("Revoked access for mobile number: {}", mobileNumber);
+        } else {
+            LOGGER.warn("No refresh token found for mobile number: {}", mobileNumber);
+            throw new RuntimeException("No refresh token found for mobile number: " + mobileNumber);
+        }
+
+        return ResponseEntity.ok("Agent access revoked successfully");
+    }
+}
 

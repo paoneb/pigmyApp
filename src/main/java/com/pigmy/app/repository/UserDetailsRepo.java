@@ -9,6 +9,6 @@ import java.util.Optional;
 
 public interface UserDetailsRepo extends JpaRepository<UploadMobileNumber,Long>
 {
-    List<UploadMobileNumber> findByAccountNumberInAndBankCode(List<Integer> accountNumbers, String bankCode);
+    List<UploadMobileNumber> findByAccountNumberInAndBankCode(List<String> accountNumbers, String bankCode);
 
 }

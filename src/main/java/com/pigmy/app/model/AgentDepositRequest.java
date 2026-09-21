@@ -17,7 +17,7 @@ public class AgentDepositRequest {
     private String name;
     private int agentCode;
     private String bankCode;
-    private double depositingAmount;
+    private long depositingAmount;
     private String voucherId;
     private String from;
     private String to;

@@ -20,12 +20,22 @@ public class FetchTransactionRoute extends RouteBuilder {
 
         from("direct:fetchTransaction")
                 .routeId(FetchTransactionRoute.class.getSimpleName())
-                .log(LoggingLevel.INFO,"fetch transaction request: ${body}")
-                .bean("transactionService","fetchTransaction");
+                .choice()
+                .when(header("bankType").isEqualTo("banksoft"))
+                .log(LoggingLevel.INFO,"fetch banksoft transaction request: ${body}")
+                .bean("transactionService","fetchTransaction")
+                .when(header("bankType").isEqualTo("peocit"))
+                .log(LoggingLevel.INFO,"fetch peocit transaction request: ${body}")
+                .bean("transactionService","fetchTransactionPeocit");
 
         from("direct:searchTransaction")
                 .routeId("searchTransactionRouteId")
-                .log(LoggingLevel.INFO,"search transaction request: ${body}")
-                .bean("transactionService","searchTransaction");
+                .choice()
+                .when(header("bankType").isEqualTo("banksoft"))
+                .log(LoggingLevel.INFO,"search banksoft transaction request: ${body}")
+                .bean("transactionService","searchTransaction")
+                .when(header("bankType").isEqualTo("peocit"))
+                .log(LoggingLevel.INFO,"search peocit transaction request: ${body}")
+                .bean("transactionService","searchTransactionPeocit");
     }
 }

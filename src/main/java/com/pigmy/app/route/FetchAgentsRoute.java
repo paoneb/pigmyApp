@@ -20,8 +20,13 @@ public class FetchAgentsRoute extends RouteBuilder {
 
         from("direct:fetchPastDeposits")
                 .routeId("fetchPastDepositsId")
-                .log(LoggingLevel.INFO,"fetch past deposits request: ${body}")
-                .bean("agentService","fetchPastDeposits");
+                .choice()
+                .when(header("bankType").isEqualTo("banksoft"))
+                .log(LoggingLevel.INFO,"fetch banksoft past deposits request: ${body}")
+                .bean("agentService","fetchPastDeposits")
+                .when(header("bankType").isEqualTo("peocit"))
+                .log(LoggingLevel.INFO,"fetch peocit past deposits request: ${body}")
+                .bean("agentService","fetchPastDepositsPeocit");
 
     }
 }

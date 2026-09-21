@@ -1,4 +1,4 @@
-package com.pigmy.app.model;
+package com.pigmy.app.model.peocit;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,12 +7,13 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+
 @Entity
-@Table(name="transactions")
+@Table(name="peocit_transactions")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class Transaction {
+public class PeocitTransaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,13 +23,22 @@ public class Transaction {
     private long collectedAmount;
 
     @Column
+    private long finalAmount;
+
+    @Column
     private LocalDate collectedDate;
 
     @Column
     private String schemename;
 
     @Column
+    private String schemeId;
+
+    @Column
     private String collectiontype;
+
+    @Column
+    private LocalDate agentDepositedDate;
 
     @Column
     private String status;
@@ -49,15 +59,11 @@ public class Transaction {
     private String customerName;
 
     @Column
-    private Integer accountNumber;
+    private String accountNumber;
 
     @Column
-    private String schemeId;
+    private String transactionId;
 
     @Column
     private String agentname;
-
-    @Column
-    private LocalDate agentDepositedDate;
-
 }

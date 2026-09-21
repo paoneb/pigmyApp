@@ -1,6 +1,7 @@
 package com.pigmy.app.route;
 
 import com.pigmy.app.model.*;
+import com.pigmy.app.model.peocit.PeocitUserData;
 import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
 import com.pigmy.app.model.response.SearchTransactionResponse;
@@ -38,53 +39,62 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .component("servlet")
                 .bindingMode(RestBindingMode.auto)
                 .contextPath(restApiBaseUrl)
-                .apiProperty("cors","true");
+                .apiProperty("cors", "true");
 
 
         rest(agentPath).description("creating new agent")
-             .consumes("application/json").produces("application/json")
-             .post()
-             .responseMessage().code(200).message("successfully created agent").responseModel(CreateAgentResponse.class).endResponseMessage()
-             .type(AgentNew.class)
-             .outType(CreateAgentResponse.class)
-             .to("direct:createNewAgent")
+                .consumes("application/json").produces("application/json")
+                .post()
+                .responseMessage().code(200).message("successfully created agent").responseModel(CreateAgentResponse.class).endResponseMessage()
+                .type(AgentNew.class)
+                .outType(CreateAgentResponse.class)
+                .to("direct:createNewAgent")
 
-             .post("/deposit/multipleDate")
-             .description("agent depositing amount")
-             .type(AgentDepositRequest.class)
-             .outType(AgentDepositResponse.class)
-             .to("direct:agentMultipleDeposit")
-
-             .patch()
-             .type(AgentUpdateRequest.class)
-             .outType(CreateAgentResponse.class)
-             .to("direct:updateAgent")
+                .post("/deposit/multipleDate")
+                .description("agent depositing amount")
+                .type(AgentDepositRequest.class)
+                .outType(AgentDepositResponse.class)
+                .to("direct:agentMultipleDeposit")
 
 
-             .get()
-             .description("fetch agents by agentCode and bankCode or all agents")
-             .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(false).endParam()
-             .param().name("bankCode").type(RestParamType.query).dataType("String").required(false).endParam()
-             .type(AgentNew.class)
-             .outType(CreateAgentResponse.class)
-             .to("direct:fetchAgents")
+                .post("/deposit/multipleDate/peocit")
+                .description("agent depositing amount")
+                .type(AgentDepositRequest.class)
+                .outType(AgentDepositResponse.class)
+                .to("direct:agentMultipleDepositPeocit")
 
-             .get("/pastDeposits")
-             .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
-             .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
-             .param().name("from").type(RestParamType.query).dataType("String").required(true).endParam()
-             .param().name("to").type(RestParamType.query).dataType("String").required(true).endParam()
-             .to("direct:fetchPastDeposits")
+                .patch()
+                .type(AgentUpdateRequest.class)
+                .outType(CreateAgentResponse.class)
+                .to("direct:updateAgent")
 
-             .get("/export")
+
+                .get()
+                .description("fetch agents by agentCode and bankCode or all agents")
+                .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(false).endParam()
+                .param().name("bankCode").type(RestParamType.query).dataType("String").required(false).endParam()
+                .type(AgentNew.class)
+                .outType(CreateAgentResponse.class)
+                .to("direct:fetchAgents")
+
+                .get("/pastDeposits")
+                .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
+                .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("from").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("to").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
+                .to("direct:fetchPastDeposits")
+
+                .get("/export")
                 .param().name("depositId").type(RestParamType.query).dataType("long").required(true).endParam()
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("date").type(RestParamType.query).dataType("String").required(true).endParam()
-                .param().name("depositedAmount").type(RestParamType.query).dataType("double").required(true).endParam()
+                .param().name("depositedAmount").type(RestParamType.query).dataType("long").required(true).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .to("direct:exportDeposits")
 
-             .delete("/revoke")
+                .delete("/revoke")
                 .param().name("mobileNumber").type(RestParamType.query).dataType("String").required(true).endParam()
                 .description("revoke agent access")
                 .to("direct:revokeAgentAccess");
@@ -96,24 +106,27 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("date").type(RestParamType.query).dataType("LocalDate").required(true).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .type(Transaction.class)
                 .to("direct:fetchTransaction")
 
                 .delete()
                 .param().name("transactionId").type(RestParamType.query).dataType("Long").required(true).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .description("delete transaction details based on agentCode")
                 .type(Transaction.class)
                 .to("direct:deleteTransaction")
 
 
                 .get("/search")
-                //.param().name("agentCode").type(RestParamType.query).dataType("Integer").required(true).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("from").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("to").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("agent").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("schemeType").type(RestParamType.query).dataType("String").required(true).endParam()
                 .param().name("collectionStatus").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .type(SearchTransactionResponse.class)
                 .to("direct:searchTransaction");
 
@@ -123,15 +136,21 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .type(UserData.class)
                 .to("direct:addCustomers")
 
+                .post("/peocit")
+                .type(PeocitUserData.class)
+                .to("direct:addCustomersPeocit")
+
 
                 .get()
                 .param().name("agentCode").type(RestParamType.query).dataType("Integer").required(false).endParam()
                 .param().name("bankCode").type(RestParamType.query).dataType("String").required(false).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .type(UserData.class)
                 .to("direct:fetchCustomers")
 
 
                 .post("/upload/mobilenumbers")
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .type(UploadMobileNumberRequest.class)
                 .to("direct:addCustomersMobileNumber")
 
@@ -139,6 +158,7 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .patch("/updateMobileNumber")
                 .param().name("userId").type(RestParamType.query).dataType("long").required(true).endParam()
                 .param().name("mobilenumber").type(RestParamType.query).dataType("String").required(true).endParam()
+                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .to("direct:updateCustomersMobileNumber");
 
         rest(adminLogin)

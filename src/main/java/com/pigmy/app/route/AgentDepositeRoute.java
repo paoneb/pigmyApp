@@ -15,7 +15,7 @@ public class AgentDepositeRoute extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class)
                 .handled(true)
-                .log(LoggingLevel.ERROR,"An error occured while updating agent- ${exception.message}")
+                .log(LoggingLevel.ERROR, "An error occured while updating agent- ${exception.message}")
                 .logStackTrace(true)
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500)) // or 500
                 .setBody(simple("{\"error\":\"${exception.message}\"}"));
@@ -23,24 +23,43 @@ public class AgentDepositeRoute extends RouteBuilder {
 
         from("direct:agentMultipleDeposit")
                 .routeId("agentMultipleDepositRouteID")
-                .log(LoggingLevel.INFO,"agent deposit multiple request: ${body}")
-                .setProperty("AgentDepositMultipleDatesRequest",body())
-                .bean("transactionService","validateDepositingAmountMultipleDate")
+                .log(LoggingLevel.INFO, "banksoft agent deposit multiple request: ${body}")
+                .setProperty("AgentDepositMultipleDatesRequest", body())
+                .bean("transactionService", "validateDepositingAmountMultipleDate")
                 .transacted()
-                .bean("agentService","agentMultipleDeposit")
+                .bean("agentService", "agentMultipleDeposit")
                 .choice()
                 .when(simple("${exchangeProperty.agentDepositedMultipleDateSuccess} != null"))
-                .bean("transactionService","agentDepositingWithMultipleDate")
+                .bean("transactionService", "agentDepositingWithMultipleDate")
                 .choice()
                 .when(simple("${exchangeProperty.saveTotransaction} == true"))
-                .bean("agentService","updateStatus");
+                .bean("agentService", "updateStatus");
+
+
+        from("direct:agentMultipleDepositPeocit")
+                .routeId("agentMultipleDepositPeocitRouteID")
+                .log(LoggingLevel.INFO, "peocit agent deposit multiple request: ${body}")
+                .setProperty("PeocitAgentDepositMultipleDatesRequest", body())
+                .bean("transactionService", "validatePeocitDepositingAmountMultipleDate")
+                .transacted()
+                .bean("agentService", "agentMultipleDepositPeocit")
+                .choice()
+                .when(simple("${exchangeProperty.PeocitAgentDepositedMultipleDateSuccess} != null"))
+                .bean("transactionService", "PeocitAgentDepositingWithMultipleDate")
+                .choice()
+                .when(simple("${exchangeProperty.saveToPeocitTransaction} == true"))
+                .bean("agentService", "updatePeocitStatus");
 
 
         from("direct:exportDeposits")
                 .routeId("exportDepositsRouteID")
-                .log(LoggingLevel.INFO,"export deposit request: ${body}")
-               // .bean("agentService","fetchPastAgentDeposit")
-                .bean("transactionService","fetchPastTransaction");
+                .choice()
+                .when(header("bankType").isEqualTo("banksoft"))
+                .log(LoggingLevel.INFO, "export deposit request: ${body}")
+                .bean("transactionService", "fetchPastTransaction")
+                .when(header("bankType").isEqualTo("peocit"))
+                .log(LoggingLevel.INFO, "export peocit deposit request: ${body}")
+                .bean("transactionService", "fetchPeocitPastTransaction");
 
     }
 }
