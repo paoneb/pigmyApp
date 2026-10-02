@@ -5,10 +5,11 @@ import com.pigmy.app.model.*;
 import com.pigmy.app.model.peocit.PeocitUser;
 import com.pigmy.app.model.peocit.PeocitUserData;
 import com.pigmy.app.model.peocit.PeocitUserList;
-import com.pigmy.app.repository.AgentRepo;
-import com.pigmy.app.repository.PeocitUserRepo;
-import com.pigmy.app.repository.UserDetailsRepo;
-import com.pigmy.app.repository.UserRepo;
+import com.pigmy.app.model.sledger.SledgerUser;
+import com.pigmy.app.model.sledger.SledgerUserData;
+import com.pigmy.app.model.sledger.SledgerUserList;
+import com.pigmy.app.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.apache.camel.Body;
 import org.apache.camel.Header;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,22 +23,19 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component("addUserService")
+@RequiredArgsConstructor
 public class AddUserService {
 
-    @Autowired
-    private UserRepo userRepo;
 
-    @Autowired
-    private PeocitUserRepo peocitUserRepo;
-
-    @Autowired
-    private AgentRepo agentRepo;
-
-    @Autowired
-    private UserDetailsRepo userDetailsRepo;
+    private final UserRepo userRepo;
+    private final PeocitUserRepo peocitUserRepo;
+    private final SledgerUserRepo sledgerUserRepo;
+    private final AgentRepo agentRepo;
+    private final UserDetailsRepo userDetailsRepo;
 
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity saveUsers(@Body UserData u) throws Exception {
+
         agentRepo.findByAgentCodeAndBankCode(u.getAgentCode(), u.getBankCode())
                 .orElseThrow(() -> new Exception("Agent not found"));
 
@@ -114,6 +112,16 @@ public class AddUserService {
         }
     }
 
+    public List<SledgerUser> fetchCustomersSledger(@Header("agentCode") final Integer agentCode, @Header("bankCode") final String bankCode) {
+        if (agentCode != null) {
+            return sledgerUserRepo.findUsersByAgentCode_bankCode(agentCode, bankCode);
+
+        } else {
+            return sledgerUserRepo.findAll();
+
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity saveUsersPeocit(@Body final PeocitUserData userData) throws Exception {
 
@@ -164,9 +172,68 @@ public class AddUserService {
 
             return ResponseEntity.ok("Peocit Customer added successfully");
         } catch (Exception e) {
-            throw new RuntimeException("unable Adding peocit customer failed");
+            throw new RuntimeException("unable Adding peocit customer" +
+                    "" +
+                    "" +
+                    "customer failed");
         }
 
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity saveUsersSledger(@Body SledgerUserData sledgerUserData) throws Exception {
+
+        agentRepo.findByAgentCodeAndBankCode(sledgerUserData.getAgentCode(), sledgerUserData.getBankCode())
+                .orElseThrow(() -> new Exception("Agent not found"));
+
+        try {
+            List<String> accountNumbersSledger = sledgerUserData.getUsers()
+                    .stream()
+                    .map(SledgerUserList::getAccountNumber)
+                    .toList();
+
+            List<SledgerUser> existingSledgerList =
+                    sledgerUserRepo.findByAccountNumberInAndBankCode(accountNumbersSledger, sledgerUserData.getBankCode());
+
+            Map<String, SledgerUser> existingSledgerUsers =
+                    existingSledgerList.stream()
+                            .collect(Collectors.toMap(SledgerUser::getAccountNumber, k -> k));
+
+            List<SledgerUser> toSaveSledger = new ArrayList<>();
+
+            for (SledgerUserList sledgerUserList : sledgerUserData.getUsers()) {
+                SledgerUser existingSledgerUser = existingSledgerUsers.get(sledgerUserList.getAccountNumber());
+                if (existingSledgerUser != null) {
+                    existingSledgerUser.setSchemeId(sledgerUserList.getSchemeId());
+                    existingSledgerUser.setCurrentBalance(sledgerUserList.getCurrentBalance());
+                    existingSledgerUser.setCustomerName(sledgerUserList.getCustomerName());
+                    existingSledgerUser.setLastDepositDate(sledgerUserList.getLastDepositDate());
+
+                } else {
+                    // first time save
+                    SledgerUser sledgerUser = new SledgerUser();
+                    sledgerUser.setSchemeId(sledgerUserList.getSchemeId());
+                    sledgerUser.setAccountNumber(sledgerUserList.getAccountNumber());
+                    sledgerUser.setCustomerName(sledgerUserList.getCustomerName());
+                    sledgerUser.setCurrentBalance(sledgerUserList.getCurrentBalance());
+                    sledgerUser.setLastDepositDate(sledgerUserList.getLastDepositDate());
+                    sledgerUser.setBankCode(sledgerUserData.getBankCode());
+                    sledgerUser.setAgentCode(sledgerUserData.getAgentCode());
+                    sledgerUser.setBranchCode(sledgerUserData.getBranchCode());
+                    toSaveSledger.add(sledgerUser);
+                }
+            }
+            if (!toSaveSledger.isEmpty()) {
+                sledgerUserRepo.saveAll(toSaveSledger);
+            }
+
+            return ResponseEntity.ok("Sledger Customer added successfully");
+        } catch (Exception e) {
+            throw new RuntimeException("unable Adding Sledger customer" +
+                    "" +
+                    "" +
+                    "customer failed");
+        }
     }
 
 
@@ -265,6 +332,52 @@ public class AddUserService {
         return ResponseEntity.ok("Customers mobile numbers added successfully");
     }
 
+    public ResponseEntity addSledgerMobileNumberService(@Body UploadMobileNumberRequest uploadMobileNumberRequest) {
+        List<UploadMobileNumber> saveMobileNumber = new ArrayList<>();
+
+        List<String> accountNumbers = uploadMobileNumberRequest.getUserDetailsList()
+                .stream()
+                .map(UserDetails::getAccountNumber)
+                .toList();
+        List<UploadMobileNumber> existingList =
+                userDetailsRepo.findByAccountNumberInAndBankCode(accountNumbers, uploadMobileNumberRequest.getBankCode());
+
+// Convert to a map for quick lookup
+        Map<String, UploadMobileNumber> existingUsers =
+                existingList.stream()
+                        .collect(Collectors.toMap(UploadMobileNumber::getAccountNumber, u -> u));
+
+        for (UserDetails details : uploadMobileNumberRequest.getUserDetailsList()) {
+            UploadMobileNumber existing = existingUsers.get(details.getAccountNumber());
+            if (existing != null) {
+                existing.setMobilenumber(details.getMobilenumber());
+            } else {
+                UploadMobileNumber newEntry = new UploadMobileNumber();
+                newEntry.setAccountNumber(details.getAccountNumber());
+                newEntry.setMobilenumber(details.getMobilenumber());
+                newEntry.setBankCode(uploadMobileNumberRequest.getBankCode());
+                saveMobileNumber.add(newEntry);
+            }
+        }
+        if (!saveMobileNumber.isEmpty()) {
+            List<UploadMobileNumber> mn = userDetailsRepo.saveAll(saveMobileNumber);
+            if (!mn.isEmpty()) {
+                Integer listOfUsers = sledgerUserRepo.updateMobileNumbers(uploadMobileNumberRequest.getBankCode());
+
+                System.out.println(listOfUsers);
+
+                if (listOfUsers.equals(0)) {
+                    throw new RuntimeException("please, First add the users,");
+                }
+            } else {
+                throw new RuntimeException("unable to upload mobile number");
+            }
+        }
+
+
+        return ResponseEntity.ok("Customers mobile numbers added successfully");
+    }
+
     public ResponseEntity updateCustomersPeocitMobileNumber(@Header("userId") final long userId, @Header("mobilenumber") final String mobilenumber) {
         int rowsUpdated = peocitUserRepo.updateMobileNumberByUserId(userId, mobilenumber);
 
@@ -276,15 +389,24 @@ public class AddUserService {
 
     }
 
-    public ResponseEntity updateCustomersMobileNumber(@Header("userId") final long userId,@Header("mobilenumber") final String mobilenumber)
-    {
+    public ResponseEntity updateCustomersMobileNumber(@Header("userId") final long userId, @Header("mobilenumber") final String mobilenumber) {
         int rowsUpdated = userRepo.updateMobileNumberByUserId(userId, mobilenumber);
 
         if (rowsUpdated == 0) {
             throw new RuntimeException("No user found with id " + userId);
-        }
-        else {
+        } else {
             return ResponseEntity.ok("Customers mobile numbers added successfully");
+        }
+
+    }
+
+    public ResponseEntity updateCustomersSledgerMobileNumber(@Header("userId") final long userId, @Header("mobilenumber") final String mobilenumber) {
+        int rowsUpdated = sledgerUserRepo.updateMobileNumberByUserId(userId, mobilenumber);
+
+        if (rowsUpdated == 0) {
+            throw new RuntimeException("No user found with id " + userId);
+        } else {
+            return ResponseEntity.ok("Sledger Customers mobile numbers added successfully");
         }
 
     }

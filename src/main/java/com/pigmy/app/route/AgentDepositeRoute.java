@@ -1,6 +1,5 @@
 package com.pigmy.app.route;
 
-import jakarta.persistence.Column;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
@@ -51,6 +50,20 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .bean("agentService", "updatePeocitStatus");
 
 
+        from("direct:agentMultipleDepositSledger")
+                .routeId("agentMultipleDepositSledgerRouteID")
+                .log(LoggingLevel.INFO, "sledger agent deposit multiple request: ${body}")
+                .setProperty("SledgerAgentDepositMultipleDatesRequest", body())
+                .bean("transactionService", "validateSledgerDepositingAmountMultipleDate")
+                .transacted()
+                .bean("agentService", "agentMultipleDepositSledger")
+                .choice()
+                .when(simple("${exchangeProperty.SledgerAgentDepositedMultipleDateSuccess} != null"))
+                .bean("transactionService", "SledgerAgentDepositingWithMultipleDate")
+                .choice()
+                .when(simple("${exchangeProperty.saveToSledgerTransaction} == true"))
+                .bean("agentService", "updateSledgerStatus");
+
         from("direct:exportDeposits")
                 .routeId("exportDepositsRouteID")
                 .choice()
@@ -59,7 +72,10 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .bean("transactionService", "fetchPastTransaction")
                 .when(header("bankType").isEqualTo("peocit"))
                 .log(LoggingLevel.INFO, "export peocit deposit request: ${body}")
-                .bean("transactionService", "fetchPeocitPastTransaction");
+                .bean("transactionService", "fetchPeocitPastTransaction")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO, "export sledger deposit request: ${body}")
+                .bean("transactionService", "fetchSledgerPastTransaction");
 
     }
 }

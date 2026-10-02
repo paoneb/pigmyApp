@@ -5,6 +5,7 @@ import com.pigmy.app.model.peocit.PeocitUserData;
 import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
 import com.pigmy.app.model.response.SearchTransactionResponse;
+import com.pigmy.app.model.sledger.SledgerUserData;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.camel.model.rest.RestParamType;
@@ -51,17 +52,24 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .to("direct:createNewAgent")
 
                 .post("/deposit/multipleDate")
-                .description("agent depositing amount")
+                .description("banksoft agent depositing amount")
                 .type(AgentDepositRequest.class)
                 .outType(AgentDepositResponse.class)
                 .to("direct:agentMultipleDeposit")
 
 
                 .post("/deposit/multipleDate/peocit")
-                .description("agent depositing amount")
+                .description("peocit agent depositing amount")
                 .type(AgentDepositRequest.class)
                 .outType(AgentDepositResponse.class)
                 .to("direct:agentMultipleDepositPeocit")
+
+
+                .post("/deposit/multipleDate/sledger")
+                .description("sledger agent depositing amount")
+                .type(AgentDepositRequest.class)
+                .outType(AgentDepositResponse.class)
+                .to("direct:agentMultipleDepositSledger")
 
                 .patch()
                 .type(AgentUpdateRequest.class)
@@ -139,6 +147,10 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .post("/peocit")
                 .type(PeocitUserData.class)
                 .to("direct:addCustomersPeocit")
+
+                .post("/sledger")
+                .type(SledgerUserData.class)
+                .to("direct:addCustomersSledger")
 
 
                 .get()

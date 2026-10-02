@@ -12,42 +12,32 @@ import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.FetchTransactionResponse;
 import com.pigmy.app.model.response.SearchTransactionResponse;
 import com.pigmy.app.model.response.UserCollection;
-import com.pigmy.app.repository.AgentRepo;
+import com.pigmy.app.model.sledger.*;
 import com.pigmy.app.repository.PeocitTransactionRepo;
+import com.pigmy.app.repository.SledgerTransactionRepo;
 import com.pigmy.app.repository.TransactionRepo;
-import com.pigmy.app.repository.UserRepo;
+import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component("transactionService")
+@RequiredArgsConstructor
 public class TransactionService {
 
 
-    @Autowired
-    private TransactionRepo transactionRepoRepo;
-
-    @Autowired
-    private PeocitTransactionRepo peocitTransactionRepo;
-
-    @Autowired
-    private AgentRepo agentRepo;
-
-    @Autowired
-    private UserRepo userRepo;
+    private final TransactionRepo transactionRepoRepo;
+    private final PeocitTransactionRepo peocitTransactionRepo;
+    private final SledgerTransactionRepo sledgerTransactionRepo;
 
     private final Logger LOGGER = LoggerFactory.getLogger(TransactionService.class);
 
@@ -91,6 +81,29 @@ public class TransactionService {
                     .customerName(k.getCustomerName())
                     .accountNumber(Integer.valueOf(k.getAccountNumber()))
                     .schemeName(k.getSchemename())
+                    .status(k.getStatus()).build();
+            rs.add(response);
+        }
+
+        return rs;
+    }
+
+    public List<FetchTransactionResponse> fetchTransactionSledger(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("date") final LocalDate selectedDate, final Exchange e) {
+        List<SledgerTransaction> tr = sledgerTransactionRepo.findByAgentCodeAndBankCodeAndCollectedDateAndstatus(agCode, bankCode, selectedDate);
+
+        if (tr.isEmpty()) {
+            throw new RuntimeException("No Sledger transactions found for date: " + selectedDate);
+        }
+
+        List<FetchTransactionResponse> rs = new ArrayList<>();
+
+        for (SledgerTransaction k : tr) {
+            FetchTransactionResponse response = FetchTransactionResponse.builder()
+                    .trasactionId(k.getId())
+                    .collectedAmount(k.getCollectedAmount())
+                    .customerName(k.getCustomerName())
+                    .accountNumber(Integer.valueOf(k.getAccountNumber()))
+                    .schemeName(k.getSchemeId())
                     .status(k.getStatus()).build();
             rs.add(response);
         }
@@ -152,6 +165,32 @@ public class TransactionService {
         return searchrs;
     }
 
+    public List<SearchSledgerTransactionResponse> searchTransactionSledger(@Header("bankCode") final String bankCode, @Header("from") String start, @Header("to") String end, @Header("agent") final String agentName, @Header("schemeType") final String schemeType, @Header("collectionStatus") final String collectionStatus, final Exchange e) {
+
+        LocalDate startDate = LocalDate.parse(start);
+        LocalDate endDate = LocalDate.parse(end);
+        List<SledgerTransaction> tr = sledgerTransactionRepo.findTransactions(bankCode, startDate, endDate, agentName, collectionStatus);
+
+        if (tr.isEmpty()) {
+            throw new RuntimeException("No Sledger transactions found for date: ");
+        }
+
+        List<SearchSledgerTransactionResponse> searchrs = new ArrayList<>();
+
+        for (SledgerTransaction k : tr) {
+            SearchSledgerTransactionResponse response = SearchSledgerTransactionResponse.builder()
+                    .collectedDate(k.getCollectedDate().toString())
+                    .collectedAmount(k.getCollectedAmount())
+                    .customerName(k.getCustomerName())
+                    .accountNumber(k.getAccountNumber())
+                    .schemeName(k.getSchemeId())
+                    .status(k.getStatus())
+                    .agentName(k.getAgentname()).build();
+            searchrs.add(response);
+        }
+        return searchrs;
+    }
+
     public ResponseEntity deleteTransaction(@Header("transactionId") final long id, final Exchange e) {
         int updated = transactionRepoRepo.markTransactionAsVoid(id);
         if (updated == 0) {
@@ -166,6 +205,14 @@ public class TransactionService {
             throw new RuntimeException("Peocit Transaction not found with id: " + id);
         }
         return ResponseEntity.ok("Peocit Transaction deleted successfully");
+    }
+
+    public ResponseEntity deleteTransactionSledger(@Header("transactionId") final long id, final Exchange e) {
+        int updated = sledgerTransactionRepo.markTransactionAsVoid(id);
+        if (updated == 0) {
+            throw new RuntimeException("Sledger Transaction not found with id: " + id);
+        }
+        return ResponseEntity.ok("Sledger Transaction deleted successfully");
     }
 
 
@@ -256,7 +303,7 @@ public class TransactionService {
                 peocitAgentDepositResponse.setAgentCode(peocitAgentDepositrequest.getAgentCode());
                 peocitAgentDepositResponse.setBankCode(peocitAgentDepositrequest.getBankCode());
                 peocitAgentDepositResponse.setDepositedDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
-                // peocitAgentDepositResponse.setVpncode(peocitAgentDepositrequest.getVpncode());
+                peocitAgentDepositResponse.setVpncode(" "+peocitTransactions.get(0).getVpncode().substring(1,6));
                 peocitAgentDepositResponse.setUsers(userCollections);
                 peocitAgentDepositResponse.setTotalDepositedAmount(exchange.getProperty("totalPeocitCollectedAmountMultipleDate", Long.class));
                 LOGGER.info("Peocit Agent Deposited amount successfully", peocitAgentDepositrequest.getAgentCode(), peocitAgentDepositrequest.getBankCode());
@@ -268,6 +315,53 @@ public class TransactionService {
             }
 
 
+        }
+    }
+
+    public void SledgerAgentDepositingWithMultipleDate(final Exchange exchange) {
+        final AgentDepositRequest sledgerAgentDepositrequest = exchange.getProperty("SledgerAgentDepositMultipleDatesRequest", AgentDepositRequest.class);
+        final SledgerAgentDeposit sledgerAgentDeposit = exchange.getProperty("SledgerAgentDepositedMultipleDateSuccess", SledgerAgentDeposit.class);
+
+        if (sledgerAgentDeposit.getId() != null) {
+            List<SledgerTransaction> sledgerTransactions = exchange.getProperty("SledgertransactionDetailsMultipleDates", List.class);
+
+            List<Long> ids = sledgerTransactions.stream()
+                    .map(SledgerTransaction::getId)
+                    .toList();
+
+            int sledgerUpdatedCount = sledgerTransactionRepo.bulkUpdateTransactions(
+                    "Deposited",
+                    sledgerAgentDeposit.getId(),
+                    ids);
+
+            if (!sledgerTransactions.isEmpty() && sledgerUpdatedCount != 0) {
+                List<SledgerUserCollection> userCollections = sledgerTransactions.stream()
+                        .map(tr -> {
+                            SledgerUserCollection l = new SledgerUserCollection();
+                            l.setBranchCode(tr.getBranchCode());
+                            l.setSchemeId(tr.getSchemeId());
+                            l.setAccountNumber(tr.getAccountNumber());
+                            l.setCollectedAmount(tr.getCollectedAmount());
+                            l.setCustomerName(tr.getCustomerName());
+                            l.setCollectedDate(tr.getCollectedDate().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+                            return l;
+                        })
+                        .collect(Collectors.toList());
+
+                SledgerAgentDepositResponse sledgerAgentDepositResponse = new SledgerAgentDepositResponse();
+
+                sledgerAgentDepositResponse.setAgentCode(sledgerAgentDepositrequest.getAgentCode());
+                sledgerAgentDepositResponse.setBankCode(sledgerAgentDepositrequest.getBankCode());
+                sledgerAgentDepositResponse.setDepositedDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+                sledgerAgentDepositResponse.setUsers(userCollections);
+                sledgerAgentDepositResponse.setTotalDepositedAmount(exchange.getProperty("totalSledgerCollectedAmountMultipleDate", Long.class));
+                LOGGER.info("Sledger Agent Deposited amount successfully", sledgerAgentDepositrequest.getAgentCode(), sledgerAgentDepositrequest.getBankCode());
+                exchange.setProperty("saveToSledgerTransaction", true);
+                exchange.getIn().setBody(sledgerAgentDepositResponse);
+
+            } else {
+                throw new RuntimeException("saving sledger deposting amount failed: " + sledgerAgentDepositrequest.getBankCode());
+            }
         }
     }
 
@@ -320,6 +414,29 @@ public class TransactionService {
         }
     }
 
+    public void validateSledgerDepositingAmountMultipleDate(final Exchange exchange) {
+        final AgentDepositRequest agentDepositrequest = exchange.getProperty("SledgerAgentDepositMultipleDatesRequest", AgentDepositRequest.class);
+
+        LocalDate sledgerstart = LocalDate.parse(agentDepositrequest.getFrom());
+        LocalDate sledgerend = LocalDate.parse(agentDepositrequest.getTo());
+        List<SledgerTransaction> sledgerTransactions = sledgerTransactionRepo.findByAgentCodeAndBankCodeAndCollectedDateRangeAndstatus(agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode(), sledgerstart, sledgerend);
+
+        if (sledgerTransactions.isEmpty()) {
+            throw new RuntimeException("No transactions found for date: " + agentDepositrequest.getFrom() + "to" + " " + agentDepositrequest.getTo());
+        } else {
+            exchange.setProperty("SledgertransactionDetailsMultipleDates", sledgerTransactions);
+        }
+
+        long Sledgeramnt = sledgerTransactions.stream()
+                .map(SledgerTransaction::getCollectedAmount).reduce(0L, Long::sum);
+
+        if (Sledgeramnt == agentDepositrequest.getDepositingAmount()) {
+            exchange.setProperty("totalSledgerCollectedAmountMultipleDate", Sledgeramnt);
+        } else {
+            throw new RuntimeException("Amount mismatch: expected " + Sledgeramnt);
+        }
+    }
+
     public void fetchPastTransaction(@Header("depositId") long id, @Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("date") String dateRange, @Header("depositedAmount") long amount, final Exchange e) {
         List<Transaction> transactions = transactionRepoRepo.findByAgentDepositId(id);
 
@@ -368,11 +485,41 @@ public class TransactionService {
 
             peocitAgentDepositResponse.setAgentCode(agCode);
             peocitAgentDepositResponse.setBankCode(bankCode);
+            peocitAgentDepositResponse.setVpncode(" "+peocitTransactions.get(0).getVpncode().substring(1,6));
             peocitAgentDepositResponse.setDepositedDate(LocalDate.parse(dateRange).format((DateTimeFormatter.ofPattern("dd.MM.yy"))));
             peocitAgentDepositResponse.setUsers(userCollections);
             peocitAgentDepositResponse.setTotalDepositedAmount(amount);
             LOGGER.info("Peocit past deposit fetched successfully");
             e.getIn().setBody(peocitAgentDepositResponse);
+        }
+    }
+
+    public void fetchSledgerPastTransaction(@Header("depositId") long id, @Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("date") String dateRange, @Header("depositedAmount") long amount, final Exchange e) {
+        List<SledgerTransaction> sledgerTransactions = sledgerTransactionRepo.findByAgentDepositId(id);
+
+        if (!sledgerTransactions.isEmpty()) {
+            List<SledgerUserCollection> userCollections = sledgerTransactions.stream()
+                    .map(tr -> {
+                        SledgerUserCollection l = new SledgerUserCollection();
+                        l.setBranchCode(tr.getBranchCode());
+                        l.setSchemeId(tr.getSchemeId());
+                        l.setAccountNumber(tr.getAccountNumber());
+                        l.setCollectedAmount(tr.getCollectedAmount());
+                        l.setCustomerName(tr.getCustomerName());
+                        l.setCollectedDate(tr.getCollectedDate().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+                        return l;
+                    })
+                    .collect(Collectors.toList());
+
+            SledgerAgentDepositResponse sledgerAgentDepositResponse = new SledgerAgentDepositResponse();
+
+            sledgerAgentDepositResponse.setAgentCode(agCode);
+            sledgerAgentDepositResponse.setBankCode(bankCode);
+            sledgerAgentDepositResponse.setDepositedDate(LocalDate.parse(dateRange).format((DateTimeFormatter.ofPattern("dd.MM.yy"))));
+            sledgerAgentDepositResponse.setUsers(userCollections);
+            sledgerAgentDepositResponse.setTotalDepositedAmount(amount);
+            LOGGER.info("Sledger past deposit fetched successfully");
+            e.getIn().setBody(sledgerAgentDepositResponse);
         }
     }
 }

@@ -1,4 +1,5 @@
-package com.pigmy.app.model.peocit;
+package com.pigmy.app.model.sledger;
+
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,14 +8,12 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
-
 @Entity
-@Table(name="peocit_transactions")
+@Table(name="sledger_transactions")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class PeocitTransaction {
-
+public class SledgerTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,22 +22,13 @@ public class PeocitTransaction {
     private long collectedAmount;
 
     @Column
-    private long finalAmount;
-
-    @Column
     private LocalDate collectedDate;
-
-    @Column
-    private String schemename;
 
     @Column
     private String schemeId;
 
     @Column
     private String collectiontype;
-
-    @Column
-    private LocalDate agentDepositedDate;
 
     @Column
     private String status;
@@ -68,5 +58,9 @@ public class PeocitTransaction {
     private String agentname;
 
     @Column
-    private String vpncode;
+    private LocalDate agentDepositedDate;
+
+    @Column
+    private String branchCode;
+
 }

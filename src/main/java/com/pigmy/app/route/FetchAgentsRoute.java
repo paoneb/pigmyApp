@@ -26,7 +26,10 @@ public class FetchAgentsRoute extends RouteBuilder {
                 .bean("agentService","fetchPastDeposits")
                 .when(header("bankType").isEqualTo("peocit"))
                 .log(LoggingLevel.INFO,"fetch peocit past deposits request: ${body}")
-                .bean("agentService","fetchPastDepositsPeocit");
+                .bean("agentService","fetchPastDepositsPeocit")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO,"fetch sledger past deposits request: ${body}")
+                .bean("agentService","fetchPastDepositsSledger");
 
     }
 }

@@ -12,7 +12,7 @@ public class FetchTransactionRoute extends RouteBuilder {
     public void configure() throws Exception {
         onException(Exception.class)
                 .handled(true)
-                .log(LoggingLevel.ERROR,"An error occured while fetching transaction- ${exception.message}")
+                .log(LoggingLevel.ERROR, "An error occured while fetching transaction- ${exception.message}")
                 .logStackTrace(true)
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500)) // or 500
                 .setBody(simple("{\"error\":\"${exception.message}\"}"));
@@ -22,20 +22,26 @@ public class FetchTransactionRoute extends RouteBuilder {
                 .routeId(FetchTransactionRoute.class.getSimpleName())
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO,"fetch banksoft transaction request: ${body}")
-                .bean("transactionService","fetchTransaction")
+                .log(LoggingLevel.INFO, "fetch banksoft transaction request: ${body}")
+                .bean("transactionService", "fetchTransaction")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO,"fetch peocit transaction request: ${body}")
-                .bean("transactionService","fetchTransactionPeocit");
+                .log(LoggingLevel.INFO, "fetch peocit transaction request: ${body}")
+                .bean("transactionService", "fetchTransactionPeocit")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO, "fetch sledger transaction request: ${body}")
+                .bean("transactionService", "fetchTransactionSledger");
 
         from("direct:searchTransaction")
                 .routeId("searchTransactionRouteId")
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO,"search banksoft transaction request: ${body}")
-                .bean("transactionService","searchTransaction")
+                .log(LoggingLevel.INFO, "search banksoft transaction request: ${body}")
+                .bean("transactionService", "searchTransaction")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO,"search peocit transaction request: ${body}")
-                .bean("transactionService","searchTransactionPeocit");
+                .log(LoggingLevel.INFO, "search peocit transaction request: ${body}")
+                .bean("transactionService", "searchTransactionPeocit")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO, "search sledger transaction request: ${body}")
+                .bean("transactionService", "searchTransactionSledger");
     }
 }

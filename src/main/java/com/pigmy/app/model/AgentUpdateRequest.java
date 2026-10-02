@@ -20,4 +20,5 @@ public class AgentUpdateRequest {
     private String type;
     private long limitAmount;
     private String status;
+    private Integer graceDays;
 }

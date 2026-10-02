@@ -8,7 +8,6 @@ import lombok.Data;
 
 @Entity
 @Table(name = "peocit_user")
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class PeocitUser {

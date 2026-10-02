@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -18,53 +19,50 @@ import java.util.Collections;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-  //  private static final Key secureSigningKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-
-    private static final String SECRET_KEY = "13f760869577f85a5dceb39e69d83e1998898cbe662f27bc9689a5b61e8a061b2a8329af";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        SecurityContextHolder.clearContext();
+
         String authHeader = request.getHeader("Authorization");
 
 
-
         String path = request.getRequestURI();
+
         if (path.startsWith("/pigmy/v1/login")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         if (authHeader != null) {
-            String token = authHeader;
 
             try {
-                Claims claims = Jwts.parser()
-                        .setSigningKey(SECRET_KEY)
-                        .parseClaimsJws(token)
+                Claims claims = Jwts.parserBuilder()
+                        .setSigningKey(secretKey)
+                        .build()
+                        .parseClaimsJws(authHeader)
                         .getBody();
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(claims.getSubject(), null, Collections.emptyList());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("Path: " + request.getRequestURI());
-                System.out.println("Auth header: " + request.getHeader("Authorization"));
-                System.out.println("Authentication: " + SecurityContextHolder.getContext().getAuthentication());
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Token expired\"}");
+                return;
+            } catch (io.jsonwebtoken.JwtException e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Invalid token\"}");
+                return;
             }
-           catch (io.jsonwebtoken.ExpiredJwtException e) {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Token expired\"}");
-                    return;
-                } catch (io.jsonwebtoken.JwtException e) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\":\"Invalid token\"}");
-                    return;
-                }
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing Token");
             return;

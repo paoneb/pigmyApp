@@ -1,21 +1,22 @@
-package com.pigmy.app.model;
+package com.pigmy.app.model.sledger;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Data;
 
+
 @Entity
-@Table(name = "user")
+@Table(name = "sledger_user")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class User {
+public class SledgerUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sledger_user_seq")
     @SequenceGenerator(
-            name = "user_seq",
-            sequenceName = "user_seq",
+            name = "sledger_user_seq",
+            sequenceName = "sledger_user_seq",
             allocationSize = 100 // must match batch_size
     )
     @Column(name = "user_id")
@@ -46,4 +47,6 @@ public class User {
     @Column
     private String mobilenumber;
 
+    @Column
+    private String branchCode;
 }

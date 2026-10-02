@@ -6,11 +6,11 @@ import com.pigmy.app.model.AgentDepositRequest;
 import com.pigmy.app.model.AgentNew;
 import com.pigmy.app.model.AgentUpdateRequest;
 import com.pigmy.app.model.peocit.PeocitAgentDeposit;
-import com.pigmy.app.model.response.AgentDepositResponse;
 import com.pigmy.app.model.response.CreateAgentResponse;
 import com.pigmy.app.model.response.FetchPastDepositsResponse;
-import com.pigmy.app.model.response.UserCollection;
+import com.pigmy.app.model.sledger.SledgerAgentDeposit;
 import com.pigmy.app.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.apache.camel.Body;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
@@ -19,32 +19,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component("agentService")
+@RequiredArgsConstructor
 public class AgentService {
 
-    @Autowired
-    private AgentRepo agentRepo;
 
-    @Autowired
-    private AgentDepositRepo agentDepositRepo;
-
-    @Autowired
-    private PeocitAgentDepositRepo peocitAgentDepositRepo;
-
-    @Autowired
-    private TransactionRepo transactionRepo;
-
-    @Autowired
-    private RefreshTokenRepo refreshTokenRepo;
+    private final AgentRepo agentRepo;
+    private final AgentDepositRepo agentDepositRepo;
+    private final PeocitAgentDepositRepo peocitAgentDepositRepo;
+    private final SledgerAgentDepositRepo sledgerAgentDepositRepo;
+    private final RefreshTokenRepo refreshTokenRepo;
 
     private final Logger LOGGER = LoggerFactory.getLogger(AgentService.class);
 
@@ -83,6 +73,7 @@ public class AgentService {
         existingAgent.setBankCode(updateAgent.getBankCode());
         existingAgent.setPassword(updateAgent.getPassword());
         existingAgent.setStatus(updateAgent.getStatus());
+        existingAgent.setGraceDays(updateAgent.getGraceDays());
 
         agentRepo.save(existingAgent);
 
@@ -115,7 +106,7 @@ public class AgentService {
 
         LOGGER.info("agent deposit multiple date request received agentCode: {}, bankCode: {}", agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode());
 
-        String collectedDate = agentDepositrequest.getFrom() + "to" + agentDepositrequest.getTo();
+        String collectedDate = String.format("%s to %s", agentDepositrequest.getFrom(), agentDepositrequest.getTo());
 
         AgentDeposit agd = new AgentDeposit();
 
@@ -139,7 +130,7 @@ public class AgentService {
 
         LOGGER.info("peocit agent deposit multiple date request received agentCode: {}, bankCode: {}", agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode());
 
-        String collectedDate = agentDepositrequest.getFrom() + "to" + agentDepositrequest.getTo();
+        String collectedDate = String.format("%s to %s", agentDepositrequest.getFrom(), agentDepositrequest.getTo());
 
         PeocitAgentDeposit peocitAgentDeposit = new PeocitAgentDeposit();
 
@@ -158,6 +149,31 @@ public class AgentService {
     }
 
 
+    public void agentMultipleDepositSledger(@Body AgentDepositRequest agentDepositrequest, final Exchange e) {
+        AgentNew agent = agentRepo.findByAgentCodeAndBankCode(agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode())
+                .orElseThrow(() -> new RuntimeException("Agent not found"));
+
+        LOGGER.info("sledger agent deposit multiple date request received agentCode: {}, bankCode: {}", agentDepositrequest.getAgentCode(), agentDepositrequest.getBankCode());
+
+        String collectedDate = String.format("%s to %s", agentDepositrequest.getFrom(), agentDepositrequest.getTo());
+
+        SledgerAgentDeposit sledgerAgentDeposit = new SledgerAgentDeposit();
+
+        sledgerAgentDeposit.setAgentCode(agentDepositrequest.getAgentCode());
+        sledgerAgentDeposit.setBankCode(agentDepositrequest.getBankCode());
+        sledgerAgentDeposit.setDepositingAmount(agentDepositrequest.getDepositingAmount());
+        sledgerAgentDeposit.setVoucherId(agentDepositrequest.getVoucherId());
+        sledgerAgentDeposit.setDepositDate(LocalDate.now());
+        sledgerAgentDeposit.setDateOfCollectedAmount(collectedDate);
+        sledgerAgentDeposit.setDepositStatus("Progressing");
+        sledgerAgentDeposit.setAgentName(agentDepositrequest.getName());
+
+        SledgerAgentDeposit sledgerAgentDepositedMultipleDateOK = sledgerAgentDepositRepo.save(sledgerAgentDeposit);
+        e.setProperty("SledgerAgentDepositedMultipleDateSuccess", sledgerAgentDepositedMultipleDateOK);
+        LOGGER.info("updated sledger agent deposit details", sledgerAgentDepositedMultipleDateOK.getId());
+    }
+
+
     public void updateStatus(final Exchange e) {
         final AgentDeposit agentDeposit = e.getProperty("agentDepositedMultipleDateSuccess", AgentDeposit.class);
         agentDepositRepo.updateAgentDesositStatus(agentDeposit.getId());
@@ -166,6 +182,11 @@ public class AgentService {
     public void updatePeocitStatus(final Exchange e) {
         final PeocitAgentDeposit peocitAgentDeposit = e.getProperty("PeocitAgentDepositedMultipleDateSuccess", PeocitAgentDeposit.class);
         peocitAgentDepositRepo.updatePeocitAgentDesositStatus(peocitAgentDeposit.getId());
+    }
+
+    public void updateSledgerStatus(final Exchange e) {
+        final SledgerAgentDeposit sledgerAgentDeposit = e.getProperty("SledgerAgentDepositedMultipleDateSuccess", SledgerAgentDeposit.class);
+        sledgerAgentDepositRepo.updatePeocitAgentDesositStatus(sledgerAgentDeposit.getId());
     }
 
     public void fetchPastDeposits(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("from") String start, @Header("to") String end, final Exchange e) {
@@ -201,6 +222,28 @@ public class AgentService {
 
         if (!peocitAgentDeposit.isEmpty()) {
             List<FetchPastDepositsResponse> agentDepositResponseList = peocitAgentDeposit.stream().map(tr -> {
+                        FetchPastDepositsResponse agentDepositResponse = new FetchPastDepositsResponse();
+                        agentDepositResponse.setDepositId(tr.getId());
+                        agentDepositResponse.setAgentCode(tr.getAgentCode());
+                        agentDepositResponse.setBankCode(tr.getBankCode());
+                        agentDepositResponse.setDepositDate(tr.getDepositDate().toString());
+                        agentDepositResponse.setTotalDepositedAmount(tr.getDepositingAmount());
+                        return agentDepositResponse;
+                    })
+                    .collect(Collectors.toList());
+
+            e.getIn().setBody(agentDepositResponseList);
+        }
+    }
+
+    public void fetchPastDepositsSledger(@Header("agentCode") final Integer agCode, @Header("bankCode") final String bankCode, @Header("from") String start, @Header("to") String end, final Exchange e) {
+        LocalDate startDate = LocalDate.parse(start);
+        LocalDate endDate = LocalDate.parse(end);
+
+        List<SledgerAgentDeposit> sledgerAgentDeposit = sledgerAgentDepositRepo.findByAgentCodeAndBankCodeAndDepositDateRangeAndstatus(agCode, bankCode, startDate, endDate);
+
+        if (!sledgerAgentDeposit.isEmpty()) {
+            List<FetchPastDepositsResponse> agentDepositResponseList = sledgerAgentDeposit.stream().map(tr -> {
                         FetchPastDepositsResponse agentDepositResponse = new FetchPastDepositsResponse();
                         agentDepositResponse.setDepositId(tr.getId());
                         agentDepositResponse.setAgentCode(tr.getAgentCode());

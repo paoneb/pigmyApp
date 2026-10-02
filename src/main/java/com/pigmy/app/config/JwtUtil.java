@@ -2,6 +2,7 @@ package com.pigmy.app.config;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -10,23 +11,25 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-   // private static final String SECRET_KEY = "mySecretKey123"; // use env variable in prod
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-   // Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    @Value("${jwt.expiration:3600000}")
+    private long expirationMillis;
 
-    private static final String SECRET_KEY = "13f760869577f85a5dceb39e69d83e1998898cbe662f27bc9689a5b61e8a061b2a8329af";
-
-
-    private static final long EXPIRATION = 1000 * 60 * 60; // 1 hour
-   //private static final long EXPIRATION= 1000 * 60 * 5;
 
     public String generateToken(String username, String bankCode) {
+
+        long now = System.currentTimeMillis();
+        Date issuedAt = new Date(now);
+        Date expiry = new Date(now + expirationMillis);
+
         return Jwts.builder()
                 .setSubject(username)
                 .claim("bankCode", bankCode)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiry)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 

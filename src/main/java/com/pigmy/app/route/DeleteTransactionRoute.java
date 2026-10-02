@@ -22,6 +22,9 @@ public class DeleteTransactionRoute extends RouteBuilder {
                 .bean("transactionService","deleteTransaction")
                 .when(header("bankType").isEqualTo("peocit"))
                 .log(LoggingLevel.INFO,"delete peocit transaction request: ${body}")
-                .bean("transactionService","deleteTransactionPeocit");
+                .bean("transactionService","deleteTransactionPeocit")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO,"delete sledger transaction request: ${body}")
+                .bean("transactionService","deleteTransactionSledger");
     }
 }

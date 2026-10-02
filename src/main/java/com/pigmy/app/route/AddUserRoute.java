@@ -28,6 +28,11 @@ public class AddUserRoute extends RouteBuilder {
                 .log(LoggingLevel.INFO, "Add User Peocit request: ${body}")
                 .bean("addUserService", "saveUsersPeocit");
 
+        from("direct:addCustomersSledger")
+                .routeId("addCustomersSledgerRouteId")
+                .log(LoggingLevel.INFO, "Add User Sledger request: ${body}")
+                .bean("addUserService", "saveUsersSledger");
+
 
         from("direct:fetchCustomers")
                 .routeId("fetchCustomersRouteId")
@@ -37,7 +42,10 @@ public class AddUserRoute extends RouteBuilder {
                 .bean("addUserService", "fetchCustomers")
                 .when(header("bankType").isEqualTo("peocit"))
                 .log(LoggingLevel.INFO, "fetch User Peocit request: ${body}")
-                .bean("addUserService", "fetchCustomersPeocit");
+                .bean("addUserService", "fetchCustomersPeocit")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO, "fetch User Sledger request: ${body}")
+                .bean("addUserService", "fetchCustomersSledger");
 
         from("direct:addCustomersMobileNumber")
                 .routeId("addCustomersMobileNumberRouteId")
@@ -47,7 +55,10 @@ public class AddUserRoute extends RouteBuilder {
                 .bean("addUserService", "addMobileNumberService")
                 .when(header("bankType").isEqualTo("peocit"))
                 .log(LoggingLevel.INFO, "addCustomers Peocit MobileNumber request: ${body}")
-                .bean("addUserService", "addPeocitMobileNumberService");
+                .bean("addUserService", "addPeocitMobileNumberService")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO, "addCustomers Sledger MobileNumber request: ${body}")
+                .bean("addUserService", "addSledgerMobileNumberService");
 
         from("direct:updateCustomersMobileNumber")
                 .routeId("updateCustomersMobileNumberRouteId")
@@ -57,7 +68,10 @@ public class AddUserRoute extends RouteBuilder {
                 .bean("addUserService", "updateCustomersMobileNumber")
                 .when(header("bankType").isEqualTo("peocit"))
                 .log(LoggingLevel.INFO, "update Customers Peocit MobileNumber request: ${body}")
-                .bean("addUserService", "updateCustomersPeocitMobileNumber");
+                .bean("addUserService", "updateCustomersPeocitMobileNumber")
+                .when(header("bankType").isEqualTo("sledger"))
+                .log(LoggingLevel.INFO, "update Customers Sledger MobileNumber request: ${body}")
+                .bean("addUserService", "updateCustomersSledgerMobileNumber");
 
     }
 }
