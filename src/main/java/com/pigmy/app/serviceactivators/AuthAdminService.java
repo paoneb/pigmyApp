@@ -5,6 +5,7 @@ import com.pigmy.app.model.SubBranchDTO;
 import com.pigmy.app.repository.AdminLoginRepo;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Exchange;
+import org.apache.camel.Header;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +41,7 @@ public class AuthAdminService {
     }
 
 
-    public void fetchDashboardData(String bankCode, Exchange e) {
+    public void fetchDashboardData(@Header("bankCode") final String bankCode, Exchange e) {
         List<Object[]> dashboardData = adminLoginRepo.findByBankCode(bankCode);
         LocalDate date = LocalDate.parse(dashboardData.get(0)[0].toString());
         int count = Integer.parseInt(dashboardData.get(0)[1].toString());

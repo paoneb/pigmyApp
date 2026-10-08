@@ -23,15 +23,17 @@ public class CreateAgentRoute extends RouteBuilder {
                 .log(LoggingLevel.INFO, "create new agent request: ${body}")
                 .bean("agentService", "saveAgent");
 
-         from("direct:revokeAgentAccess")
+        from("direct:revokeAgentAccess")
                 .routeId("revokeAgentAccessRouteId")
-                .log(LoggingLevel.INFO, "Revoke agent access request: ${body}")
+                .log(LoggingLevel.INFO, "Revoke agent access request:  ${header.mobileNumber}")
                 .bean("agentService", "revokeAgentAccess");
 
-         from("direct:fetchDashboardData")
+        from("direct:fetchDashboardData")
                 .routeId("fetchDashboardDataRouteId")
-                .log(LoggingLevel.INFO, "Fetch dashboard data request: ${body}")
-                .bean("authAdminService", "fetchDashboardData");
+                .log(LoggingLevel.INFO, "Fetch dashboard data request bank code: ${header.bankCode}")
+                .bean("authAdminService", "fetchDashboardData")
+                .removeProperties(".*")
+                .removeHeaders(".*");
     }
 
 }

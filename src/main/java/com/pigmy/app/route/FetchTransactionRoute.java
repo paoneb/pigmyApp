@@ -22,26 +22,32 @@ public class FetchTransactionRoute extends RouteBuilder {
                 .routeId(FetchTransactionRoute.class.getSimpleName())
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO, "fetch banksoft transaction request: ${body}")
+                .log(LoggingLevel.INFO, "fetch banksoft transaction request ${header.bankCode}, ${header.agentCode}")
                 .bean("transactionService", "fetchTransaction")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO, "fetch peocit transaction request: ${body}")
+                .log(LoggingLevel.INFO, "fetch peocit transaction request ${header.bankCode}, ${header.agentCode}")
                 .bean("transactionService", "fetchTransactionPeocit")
                 .when(header("bankType").isEqualTo("sledger"))
-                .log(LoggingLevel.INFO, "fetch sledger transaction request: ${body}")
-                .bean("transactionService", "fetchTransactionSledger");
+                .log(LoggingLevel.INFO, "fetch sledger transaction request ${header.bankCode}, ${header.agentCode}")
+                .bean("transactionService", "fetchTransactionSledger")
+                .end()
+                .removeProperties(".*")
+                .removeHeaders(".*");
 
         from("direct:searchTransaction")
                 .routeId("searchTransactionRouteId")
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO, "search banksoft transaction request: ${body}")
+                .log(LoggingLevel.INFO, "search banksoft transaction request ${header.bankCode}, ${header.bankType}")
                 .bean("transactionService", "searchTransaction")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO, "search peocit transaction request: ${body}")
+                .log(LoggingLevel.INFO, "search peocit transaction request ${header.bankCode}, ${header.bankType}")
                 .bean("transactionService", "searchTransactionPeocit")
                 .when(header("bankType").isEqualTo("sledger"))
-                .log(LoggingLevel.INFO, "search sledger transaction request: ${body}")
-                .bean("transactionService", "searchTransactionSledger");
+                .log(LoggingLevel.INFO, "search sledger transaction request ${header.bankCode}, ${header.bankType}")
+                .bean("transactionService", "searchTransactionSledger")
+                .end()
+                .removeProperties(".*")
+                .removeHeaders(".*");
     }
 }

@@ -12,6 +12,8 @@ import com.pigmy.app.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.camel.Body;
 import org.apache.camel.Header;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -32,6 +34,8 @@ public class AddUserService {
     private final SledgerUserRepo sledgerUserRepo;
     private final AgentRepo agentRepo;
     private final UserDetailsRepo userDetailsRepo;
+
+    private final Logger LOGGER = LoggerFactory.getLogger(AddUserService.class);
 
     @Transactional(rollbackFor = Exception.class)
     public ResponseEntity saveUsers(@Body UserData u) throws Exception {
@@ -77,13 +81,12 @@ public class AddUserService {
                     toSave.add(user);
                 }
             }
+
+            LOGGER.info("Saving {} banksoft users for bankCode: {} and agentCode: {}", toSave.size(), u.getBankCode(), u.getAgentCode());
+
             if (!toSave.isEmpty()) {
                 userRepo.saveAll(toSave);
             }
-
-            //   userRepo.saveAll(toSave);
-            System.out.println("Inserted users: {}" + toSave.size());
-
 
             return ResponseEntity.ok(" banksoft Customer added successfully");
         } catch (Exception e) {
@@ -166,6 +169,9 @@ public class AddUserService {
                     toSavePeocit.add(peocitUser);
                 }
             }
+
+            LOGGER.info("Saving {} Peocit users for bankCode: {} and agentCode: {}", toSavePeocit.size(), userData.getBankCode(), userData.getAgentCode());
+
             if (!toSavePeocit.isEmpty()) {
                 peocitUserRepo.saveAll(toSavePeocit);
             }
@@ -223,6 +229,9 @@ public class AddUserService {
                     toSaveSledger.add(sledgerUser);
                 }
             }
+
+            LOGGER.info("Saving {} Sledger users for bankCode: {} and agentCode: {}", toSaveSledger.size(), sledgerUserData.getBankCode(), sledgerUserData.getAgentCode());
+
             if (!toSaveSledger.isEmpty()) {
                 sledgerUserRepo.saveAll(toSaveSledger);
             }
@@ -265,12 +274,12 @@ public class AddUserService {
                 saveMobileNumber.add(newEntry);
             }
         }
+        LOGGER.info("Saving {} banksoft mobile numbers for bankCode: {}", saveMobileNumber.size(), uploadMobileNumberRequest.getBankCode());
+
         if (!saveMobileNumber.isEmpty()) {
             List<UploadMobileNumber> mn = userDetailsRepo.saveAll(saveMobileNumber);
             if (!mn.isEmpty()) {
                 Integer listOfUsers = userRepo.updateMobileNumbers(uploadMobileNumberRequest.getBankCode());
-
-                System.out.println(listOfUsers);
 
                 if (listOfUsers.equals(0)) {
                     throw new RuntimeException("please, First add the users,");
@@ -313,12 +322,12 @@ public class AddUserService {
                 saveMobileNumber.add(newEntry);
             }
         }
+        LOGGER.info("Saving {} Peocit mobile numbers for bankCode: {}", saveMobileNumber.size(), uploadMobileNumberRequest.getBankCode());
+
         if (!saveMobileNumber.isEmpty()) {
             List<UploadMobileNumber> mn = userDetailsRepo.saveAll(saveMobileNumber);
             if (!mn.isEmpty()) {
                 Integer listOfUsers = peocitUserRepo.updateMobileNumbers(uploadMobileNumberRequest.getBankCode());
-
-                System.out.println(listOfUsers);
 
                 if (listOfUsers.equals(0)) {
                     throw new RuntimeException("please, First add the users,");
@@ -359,12 +368,12 @@ public class AddUserService {
                 saveMobileNumber.add(newEntry);
             }
         }
+        LOGGER.info("Saving {} Sledger mobile numbers for bankCode: {}", saveMobileNumber.size(), uploadMobileNumberRequest.getBankCode());
+
         if (!saveMobileNumber.isEmpty()) {
             List<UploadMobileNumber> mn = userDetailsRepo.saveAll(saveMobileNumber);
             if (!mn.isEmpty()) {
                 Integer listOfUsers = sledgerUserRepo.updateMobileNumbers(uploadMobileNumberRequest.getBankCode());
-
-                System.out.println(listOfUsers);
 
                 if (listOfUsers.equals(0)) {
                     throw new RuntimeException("please, First add the users,");
@@ -395,7 +404,7 @@ public class AddUserService {
         if (rowsUpdated == 0) {
             throw new RuntimeException("No user found with id " + userId);
         } else {
-            return ResponseEntity.ok("Customers mobile numbers added successfully");
+            return ResponseEntity.ok("banksoft Customers mobile numbers added successfully");
         }
 
     }

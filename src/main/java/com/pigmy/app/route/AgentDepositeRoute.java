@@ -32,7 +32,8 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .bean("transactionService", "agentDepositingWithMultipleDate")
                 .choice()
                 .when(simple("${exchangeProperty.saveTotransaction} == true"))
-                .bean("agentService", "updateStatus");
+                .bean("agentService", "updateStatus")
+                .removeProperties(".*");
 
 
         from("direct:agentMultipleDepositPeocit")
@@ -47,7 +48,8 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .bean("transactionService", "PeocitAgentDepositingWithMultipleDate")
                 .choice()
                 .when(simple("${exchangeProperty.saveToPeocitTransaction} == true"))
-                .bean("agentService", "updatePeocitStatus");
+                .bean("agentService", "updatePeocitStatus")
+                .removeProperties(".*");
 
 
         from("direct:agentMultipleDepositSledger")
@@ -62,20 +64,24 @@ public class AgentDepositeRoute extends RouteBuilder {
                 .bean("transactionService", "SledgerAgentDepositingWithMultipleDate")
                 .choice()
                 .when(simple("${exchangeProperty.saveToSledgerTransaction} == true"))
-                .bean("agentService", "updateSledgerStatus");
+                .bean("agentService", "updateSledgerStatus")
+                .removeProperties(".*");
 
         from("direct:exportDeposits")
                 .routeId("exportDepositsRouteID")
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO, "export deposit request: ${body}")
+                .log(LoggingLevel.INFO, "export deposit request ${header.agentCode} ${header.bankCode}")
                 .bean("transactionService", "fetchPastTransaction")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO, "export peocit deposit request: ${body}")
+                .log(LoggingLevel.INFO, "export peocit deposit request ${header.agentCode} ${header.bankCode}")
                 .bean("transactionService", "fetchPeocitPastTransaction")
                 .when(header("bankType").isEqualTo("sledger"))
-                .log(LoggingLevel.INFO, "export sledger deposit request: ${body}")
-                .bean("transactionService", "fetchSledgerPastTransaction");
+                .log(LoggingLevel.INFO, "export sledger deposit request ${header.agentCode} ${header.bankCode}")
+                .bean("transactionService", "fetchSledgerPastTransaction")
+                .end()
+                .removeProperties(".*")
+                .removeHeaders(".*");
 
     }
 }

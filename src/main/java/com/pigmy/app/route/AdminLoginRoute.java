@@ -43,6 +43,7 @@ public class AdminLoginRoute extends RouteBuilder {
                     if (adminService.validate(req.getUserName(), req.getPassword(), req.getBankCode(),exchange)) {
                         String token = jwtUtil.generateToken(req.getUserName(), req.getBankCode());
                         exchange.getMessage().setBody(new LoginResponse(exchange.getProperty("bankName").toString(),req.getBankCode(), token,exchange.getProperty("city").toString(), (List<SubBranchDTO>) exchange.getProperty("subBranches"),exchange.getProperty("bankType").toString()));
+                        exchange.removeProperties(".*");
                     } else {
                         exchange.getMessage().setHeader("CamelHttpResponseCode", 401);
                         exchange.getMessage().setBody("Invalid credentials");

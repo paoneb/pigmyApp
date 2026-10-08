@@ -15,21 +15,26 @@ public class FetchAgentsRoute extends RouteBuilder {
 
         from("direct:fetchAgents")
                 .routeId(FetchAgentsRoute.class.getSimpleName())
-                .log(LoggingLevel.INFO,"fetch agent request: ${body}")
-                .bean("agentService","fetchAgent");
+                .log(LoggingLevel.INFO, "fetch agent request ${header.bankCode}, ${header.agentCode}")
+                .bean("agentService","fetchAgent")
+                .removeProperties(".*")
+                .removeHeaders(".*");
 
         from("direct:fetchPastDeposits")
                 .routeId("fetchPastDepositsId")
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO,"fetch banksoft past deposits request: ${body}")
+                .log(LoggingLevel.INFO,"fetch banksoft past deposits request ${header.bankCode}, ${header.agentCode}, ${header.from}, ${header.to}")
                 .bean("agentService","fetchPastDeposits")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO,"fetch peocit past deposits request: ${body}")
+                .log(LoggingLevel.INFO,"fetch peocit past deposits request ${header.bankCode}, ${header.agentCode}, ${header.from}, ${header.to}")
                 .bean("agentService","fetchPastDepositsPeocit")
                 .when(header("bankType").isEqualTo("sledger"))
-                .log(LoggingLevel.INFO,"fetch sledger past deposits request: ${body}")
-                .bean("agentService","fetchPastDepositsSledger");
+                .log(LoggingLevel.INFO,"fetch sledger past deposits request ${header.bankCode}, ${header.agentCode}, ${header.from}, ${header.to}")
+                .bean("agentService","fetchPastDepositsSledger")
+                .end()
+                .removeProperties(".*")
+                .removeHeaders(".*");
 
     }
 }

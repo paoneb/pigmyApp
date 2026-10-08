@@ -340,7 +340,7 @@ public class TransactionService {
                             SledgerUserCollection l = new SledgerUserCollection();
                             l.setBranchCode(tr.getBranchCode());
                             l.setSchemeId(tr.getSchemeId());
-                            l.setAccountNumber(tr.getAccountNumber());
+                            l.setAccountNumber(STR."DEP\{tr.getSchemeId()}\{tr.getAccountNumber()}");
                             l.setCollectedAmount(tr.getCollectedAmount());
                             l.setCustomerName(tr.getCustomerName());
                             l.setCollectedDate(tr.getCollectedDate().format(DateTimeFormatter.ofPattern("dd.MM.yy")));
@@ -386,7 +386,7 @@ public class TransactionService {
         if (totalCollectedAmount == agentDepositrequest.getDepositingAmount()) {
             exchange.setProperty("totalCollectedAmountMultipleDate", totalCollectedAmount);
         } else {
-            throw new RuntimeException("Amount mismatch: expected " + totalCollectedAmount);
+            throw new RuntimeException("Amount mismatch ,please enter correct amount");
         }
     }
 
@@ -410,7 +410,7 @@ public class TransactionService {
         if (amnt == agentDepositrequest.getDepositingAmount()) {
             exchange.setProperty("totalPeocitCollectedAmountMultipleDate", amnt);
         } else {
-            throw new RuntimeException("Amount mismatch: expected " + amnt);
+            throw new RuntimeException("Amount mismatch ,please enter correct amount");
         }
     }
 
@@ -433,7 +433,7 @@ public class TransactionService {
         if (Sledgeramnt == agentDepositrequest.getDepositingAmount()) {
             exchange.setProperty("totalSledgerCollectedAmountMultipleDate", Sledgeramnt);
         } else {
-            throw new RuntimeException("Amount mismatch: expected " + Sledgeramnt);
+            throw new RuntimeException("Amount mismatch ,please enter correct amount");
         }
     }
 
@@ -503,7 +503,7 @@ public class TransactionService {
                         SledgerUserCollection l = new SledgerUserCollection();
                         l.setBranchCode(tr.getBranchCode());
                         l.setSchemeId(tr.getSchemeId());
-                        l.setAccountNumber(tr.getAccountNumber());
+                        l.setAccountNumber(STR."DEP\{tr.getSchemeId()}\{tr.getAccountNumber()}");
                         l.setCollectedAmount(tr.getCollectedAmount());
                         l.setCustomerName(tr.getCustomerName());
                         l.setCollectedDate(tr.getCollectedDate().format(DateTimeFormatter.ofPattern("dd.MM.yy")));

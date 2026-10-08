@@ -121,7 +121,6 @@ public class PigmyAppMainRoute extends RouteBuilder {
                 .delete()
                 .param().name("transactionId").type(RestParamType.query).dataType("Long").required(true).endParam()
                 .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
-                .param().name("bankType").type(RestParamType.header).dataType("String").required(true).endParam()
                 .description("delete transaction details based on agentCode")
                 .type(Transaction.class)
                 .to("direct:deleteTransaction")

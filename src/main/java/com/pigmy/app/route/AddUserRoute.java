@@ -19,7 +19,7 @@ public class AddUserRoute extends RouteBuilder {
 
         from("direct:addCustomers")
                 .routeId(AddUserRoute.class.getSimpleName())
-                .log(LoggingLevel.INFO, "Add User request: ${body}")
+                .log(LoggingLevel.INFO, "Add User Banksoft request: ${body}")
                 .bean("addUserService", "saveUsers");
 
 
@@ -38,39 +38,39 @@ public class AddUserRoute extends RouteBuilder {
                 .routeId("fetchCustomersRouteId")
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO, "fetch User request: ${body}")
+                .log(LoggingLevel.INFO, "fetch banksoft User request ${header.bankCode}, ${header.agentCode}")
                 .bean("addUserService", "fetchCustomers")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO, "fetch User Peocit request: ${body}")
+                .log(LoggingLevel.INFO, "fetch User Peocit request ${header.bankCode}, ${header.agentCode}")
                 .bean("addUserService", "fetchCustomersPeocit")
                 .when(header("bankType").isEqualTo("sledger"))
-                .log(LoggingLevel.INFO, "fetch User Sledger request: ${body}")
+                .log(LoggingLevel.INFO, "fetch User Sledger request ${header.bankCode}, ${header.agentCode}")
                 .bean("addUserService", "fetchCustomersSledger");
 
         from("direct:addCustomersMobileNumber")
                 .routeId("addCustomersMobileNumberRouteId")
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO, "addCustomers MobileNumber request: ${body}")
+                .log(LoggingLevel.INFO, "addCustomers MobileNumber request ${header.bankType}")
                 .bean("addUserService", "addMobileNumberService")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO, "addCustomers Peocit MobileNumber request: ${body}")
+                .log(LoggingLevel.INFO, "addCustomers Peocit MobileNumber request ${header.bankType}")
                 .bean("addUserService", "addPeocitMobileNumberService")
                 .when(header("bankType").isEqualTo("sledger"))
-                .log(LoggingLevel.INFO, "addCustomers Sledger MobileNumber request: ${body}")
+                .log(LoggingLevel.INFO, "addCustomers Sledger MobileNumber request ${header.bankType}")
                 .bean("addUserService", "addSledgerMobileNumberService");
 
         from("direct:updateCustomersMobileNumber")
                 .routeId("updateCustomersMobileNumberRouteId")
                 .choice()
                 .when(header("bankType").isEqualTo("banksoft"))
-                .log(LoggingLevel.INFO, "update banksoft Customers MobileNumber request: ${body}")
+                .log(LoggingLevel.INFO, "update banksoft Customers MobileNumber request ${header.mobilenumber}")
                 .bean("addUserService", "updateCustomersMobileNumber")
                 .when(header("bankType").isEqualTo("peocit"))
-                .log(LoggingLevel.INFO, "update Customers Peocit MobileNumber request: ${body}")
+                .log(LoggingLevel.INFO, "update Customers Peocit MobileNumber request ${header.mobilenumber}")
                 .bean("addUserService", "updateCustomersPeocitMobileNumber")
                 .when(header("bankType").isEqualTo("sledger"))
-                .log(LoggingLevel.INFO, "update Customers Sledger MobileNumber request: ${body}")
+                .log(LoggingLevel.INFO, "update Customers Sledger MobileNumber request ${header.mobilenumber}")
                 .bean("addUserService", "updateCustomersSledgerMobileNumber");
 
     }
